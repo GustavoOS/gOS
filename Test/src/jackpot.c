@@ -6,12 +6,13 @@ int fibonacci(int sequence)
     int fib;
 
     ultimate = 1;
-    step = 3;
+    penultimate = 1;
+    step = 2;
 
     if (sequence < 3)
         return 1;
 
-    while (step <= sequence)
+    while (step < sequence)
     {
         fib = ultimate + penultimate;
         penultimate = ultimate;
@@ -40,11 +41,12 @@ int isEven(int n)
         {
             parity = 1;
         }
+        step = step + 1;
     }
     return parity;
 }
 
-void main(void)
+int main(void)
 {
     int ticket;
 
