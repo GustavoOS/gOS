@@ -31,11 +31,10 @@ void insertOSIntoMemory(void)
     targetAddr = osAddress;
     while (index < osLength)
     {
-        srcAddr = srcAddr + index;
-        targetAddr = targetAddr + index;
-        moveData(srcAddr, targetAddr);
-        index = index + 1;
+        moveData(srcAddr + index, targetAddr + index);
+        index = index + one;
     }
+    output(readFromMemory(2060));
 }
 
 int main(void)
