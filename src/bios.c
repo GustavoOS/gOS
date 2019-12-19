@@ -34,12 +34,13 @@ void insertOSIntoMemory(void)
         moveData(srcAddr + index, targetAddr + index);
         index = index + one;
     }
-    output(readFromMemory(2060));
+    output(readFromMemory(osLength + osAddress - one));
 }
 
 int main(void)
 {
     setupVariables();
     insertOSIntoMemory();
+    output(49568);
     return 0;
 }
