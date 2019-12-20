@@ -3,21 +3,6 @@ int zero;
 int hdStart;
 int osAddress;
 
-void setupVariables(void)
-{
-    zero = 0;
-    one = 1;
-    osAddress = 2048;
-    hdStart = 16384;
-}
-
-void moveData(int srcAddr, int targetAddr)
-{
-    int data;
-    data = readFromMemory(srcAddr);
-    writeIntoMemory(targetAddr, data);
-}
-
 void insertOSIntoMemory(void)
 {
     int osLength;
@@ -31,7 +16,8 @@ void insertOSIntoMemory(void)
     targetAddr = osAddress;
     while (index < osLength)
     {
-        moveData(srcAddr + index, targetAddr + index);
+        writeIntoMemory(targetAddr + index,
+                        readFromMemory(srcAddr + index));
         index = index + one;
     }
     output(readFromMemory(osLength + osAddress - one));
@@ -39,7 +25,10 @@ void insertOSIntoMemory(void)
 
 int main(void)
 {
-    setupVariables();
+    zero = 0;
+    one = 1;
+    osAddress = 2048;
+    hdStart = 16384;
     insertOSIntoMemory();
     output(49568);
     return 0;
