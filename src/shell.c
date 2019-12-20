@@ -1,136 +1,103 @@
-void createFile() {}
-void listFiles() {}
-void execute(int file) {}
-void rename(int file, int newName) {}
-void delete (int file) {}
-void showLine(int file, int line) {}
-void appendLine(int file, int newLine) {}
-void changeLine(int file, int line, int newLine) {}
-void listProcess() {}
-void resume(int process) {}
-void kill(int process) {}
+int userInput;
+int null;
+int zero;
+int one;
+int two;
 
-int accessProcess(int process)
+int slot(int number)
 {
-    int userInput;
-    while (2 < 3)
+    return 18442 +
+           (1432 * number);
+}
+
+void setupVariables(void)
+{
+    zero = 0;
+    one = 1;
+    null = zero - one;
+    two = 2;
+}
+
+void movePackedData(int data, int targetAddress)
+{
+    writeIntoMemory(targetAddress, extractFirstHW(data));
+    writeIntoMemory(targetAddress + one, extractSecondHW(data));
+}
+
+void insertProcessIntoMemory(int slotStart)
+{
+    int instructionCount;
+    int copied;
+    int fullWords;
+    int word;
+
+    instructionCount = readFromMemory(slotStart + one);
+    fullWords = zero;
+    copied = zero;
+    slotStart = slotStart + two; // where program start
+    while (copied < instructionCount)
     {
-        userInput = input();
-        if (userInput == 0)
-            output(process);
-        if (userInput == 1)
-            return 0;
-        if (userInput == 2)
-        {
-            resume(process);
-            return process;
-        }
-        if (userInput == 3)
-        {
-            kill(process);
-            return 0;
-        }
+        word = readFromMemory(slotStart + fullWords);
+        movePackedData(word, copied);
+        fullWords = fullWords + one;
+        copied = copied + two;
     }
 }
 
-void edit(int file)
+int findProgramByName(int file)
 {
-    int line;
-    int userInput;
-    line = 0;
-    while (2 < 3)
+    int index;
+    index = zero;
+    while (index < 10)
     {
+        if (readFromMemory(slot(index)) == file)
+            return index;
 
+        index = index + one;
+    }
+    return null;
+}
+
+int execute(int file)
+{
+    int programIndex;
+
+    programIndex = findProgramByName(file);
+    if (programIndex == null)
+        return zero;
+    if (readFromMemory(18432 + programIndex) == 0)
+        return zero;
+    insertProcessIntoMemory(slot(programIndex));
+    return file;
+}
+
+void listProcess(int condition) {} //TODO
+int resume(int process) {}         //TODO
+void kill(int process) {}          //TODO
+
+int main(void)
+{
+    int run;
+    setupVariables();
+    run = zero;
+
+    while (run < one)
+    {
         userInput = input();
-        if (userInput == 0)
-            return;
-        if (userInput == 1)
-            showLine(file, line);
-        if (userInput == 2)
-            output(line);
+
+        if (userInput == zero)
+            output(45141);
+        if (userInput == one)
+            run = execute(input());
+        if (userInput == two)
+            run = resume(input());
         if (userInput == 3)
-            appendLine(file, input());
+            kill(input());
         if (userInput == 4)
-            line = line + 1;
+            listProcess(2);
         if (userInput == 5)
-            line = line - 1;
-        if (userInput == 6)
-        {
-            showLine(file, line);
-            changeLine(file, line, input());
-        }
-    }
-}
-
-int selectFile(int file)
-{
-    int userInput;
-    while (2 < 3)
-    {
-
-        userInput = input();
-        if (userInput == 0)
-            output(file);
-        if (userInput == 1)
-            return 0;
-        if (userInput == 2)
-        {
-            execute(file);
-            return file;
-        }
-        if (userInput == 3)
-        {
-            rename(file, input());
-            return 0;
-        }
-        if (userInput == 4)
-        {
-            delete (file);
-            return 0;
-        }
-        if (userInput == 5)
-            edit(file);
-    }
-}
-int prompt()
-{
-    int userInput;
-    int run = 0;
-    while (run < 1)
-    {
-        userInput = input();
-        if (userInput == 0)
-            output(1);
-        if (userInput == 1)
-            return 0;
-        if (userInput == 2)
-            listFiles();
-        if (userInput == 3)
-            createFile();
-        if (userInput > 3)
-            run = selectFile(userInput);
-    }
-    return run;
-}
-
-int main()
-{
-    int userInput;
-    int run = 0;
-
-    while (run < 1)
-    {
-        userInput = input();
-
-        if (userInput == 0)
-            output(0);
-        if (userInput == 1)
-            run = prompt();
-        if (userInput == 2)
-            listProcess();
-        if (userInput > 3)
-            run = accessProcess(userInput);
+            listProcess(3);
     }
 
-    return 0;
+    return zero;
 }

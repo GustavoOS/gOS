@@ -32,6 +32,6 @@ int main(void)
     one = 1;
     two = 2;
     insertProcessIntoMemory(18442); //2058 + 16384
-    output(49568); //ciao
+    output(49568);                  //ciao
     return 0;
 }
