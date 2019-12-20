@@ -1,14 +1,6 @@
 int one;
 int two;
 
-// void printInstruction(int address)
-// {
-//     int instruction;
-//     instruction = readFromMemory(address);
-//     address = address * 65536;
-//     address = address + instruction;
-//     output(address);
-// }
 void movePackedData(int data, int targetAddress)
 {
     writeIntoMemory(targetAddress, extractFirstHW(data));
