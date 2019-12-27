@@ -1,27 +1,16 @@
 int userInput;
 int null;
-int zero;
-int one;
-int two;
 
 int slot(int number)
 {
-    return 18442 +
+    return 18445 +
            (1432 * number);
-}
-
-void setupVariables(void)
-{
-    zero = 0;
-    one = 1;
-    null = zero - one;
-    two = 2;
 }
 
 void movePackedData(int data, int targetAddress)
 {
     writeIntoMemory(targetAddress, extractFirstHW(data));
-    writeIntoMemory(targetAddress + one, extractSecondHW(data));
+    writeIntoMemory(targetAddress + 1, extractSecondHW(data));
 }
 
 void insertProcessIntoMemory(int slotStart)
@@ -31,29 +20,29 @@ void insertProcessIntoMemory(int slotStart)
     int fullWords;
     int word;
 
-    instructionCount = readFromMemory(slotStart + one);
-    fullWords = zero;
-    copied = zero;
-    slotStart = slotStart + two; // where program start
+    instructionCount = readFromMemory(slotStart + 1);
+    fullWords = 0;
+    copied = 0;
+    slotStart = slotStart + 2; // where program start
     while (copied < instructionCount)
     {
         word = readFromMemory(slotStart + fullWords);
         movePackedData(word, copied);
-        fullWords = fullWords + one;
-        copied = copied + two;
+        fullWords = fullWords + 1;
+        copied = copied + 2;
     }
 }
 
 int findProgramByName(int file)
 {
     int index;
-    index = zero;
+    index = 0;
     while (index < 10)
     {
         if (readFromMemory(slot(index)) == file)
             return index;
 
-        index = index + one;
+        index = index + 1;
     }
     return null;
 }
@@ -64,9 +53,9 @@ int execute(int file)
 
     programIndex = findProgramByName(file);
     if (programIndex == null)
-        return zero;
+        return 0;
     if (readFromMemory(18432 + programIndex) == 0)
-        return zero;
+        return 0;
     insertProcessIntoMemory(slot(programIndex));
     return file;
 }
@@ -78,18 +67,18 @@ void kill(int process) {}          //TODO
 int main(void)
 {
     int run;
-    setupVariables();
-    run = zero;
+    null = 0 - 1;
+    run = 0;
 
-    while (run < one)
+    while (run < 1)
     {
         userInput = input();
 
-        if (userInput == zero)
+        if (userInput == 0)
             output(45141);
-        if (userInput == one)
+        if (userInput == 1)
             run = execute(input());
-        if (userInput == two)
+        if (userInput == 2)
             run = resume(input());
         if (userInput == 3)
             kill(input());
@@ -99,5 +88,5 @@ int main(void)
             listProcess(3);
     }
 
-    return zero;
+    return 0;
 }
