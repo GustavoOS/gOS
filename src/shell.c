@@ -1,4 +1,3 @@
-int userInput;
 int null;
 
 int slot(int number)
@@ -18,7 +17,6 @@ void insertProcessIntoMemory(int slotStart)
     int instructionCount;
     int copied;
     int fullWords;
-    int word;
 
     instructionCount = readFromMemory(slotStart + 1);
     fullWords = 0;
@@ -26,8 +24,9 @@ void insertProcessIntoMemory(int slotStart)
     slotStart = slotStart + 2; // where program start
     while (copied < instructionCount)
     {
-        word = readFromMemory(slotStart + fullWords);
-        movePackedData(word, copied);
+        movePackedData(
+            readFromMemory(slotStart + fullWords),
+            copied);
         fullWords = fullWords + 1;
         copied = copied + 2;
     }
@@ -50,13 +49,20 @@ int findProgramByName(int file)
 int execute(int file)
 {
     int programIndex;
+    int listPosition;
 
     programIndex = findProgramByName(file);
+    listPosition = 18432 + programIndex;
     if (programIndex == null)
         return 0;
-    if (readFromMemory(18432 + programIndex) == 0)
+    if (readFromMemory(listPosition) == 0)
         return 0;
     insertProcessIntoMemory(slot(programIndex));
+    writeIntoMemory(listPosition, 2);                  // Mark slot as executing
+    writeIntoMemory(18442, programIndex);              // In memory
+    writeIntoMemory(18443, programIndex);              // The leading process
+    writeIntoMemory(18444, readFromMemory(18444) + 1); //process ++
+
     return file;
 }
 
@@ -67,6 +73,7 @@ void kill(int process) {}          //TODO
 int main(void)
 {
     int run;
+    int userInput;
     null = 0 - 1;
     run = 0;
 
