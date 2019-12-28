@@ -213,6 +213,8 @@ int main(void)
     int userInput;
     int systemCall;
     int showing;
+    int greetings;
+    greetings = 45141;
     null = 0 - 1;
     run = null;
     processInMemory = readFromMemory(registers);
@@ -224,12 +226,14 @@ int main(void)
     if (systemCall == 2) // End Process
         kill(processInMemory);
     writeIntoMemory(registers, 0); // SystemCall = 0;
+
+    output(greetings);
     while (run == null)
     {
         userInput = input();
 
         if (userInput == 0)
-            output(45141); // gOS
+            output(greetings); // gOS
         if (userInput == 1)
             run = execute(input());
         if (userInput == 2)
