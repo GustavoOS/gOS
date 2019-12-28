@@ -4,13 +4,7 @@ int processInMemory;
 
 int getSlot(int file)
 {
-    return 18445 + (file * 1432);
-}
-
-void movePackedData(int data, int targetAddress)
-{
-    writeIntoMemory(targetAddress, extractFirstHW(data));
-    writeIntoMemory(targetAddress + 1, extractSecondHW(data));
+    return 18444 + (file * 1432);
 }
 
 void insertProcessIntoMemory(int file)
@@ -19,17 +13,16 @@ void insertProcessIntoMemory(int file)
     int copied;
     int fullWords;
     int slotStart;
+    int data;
 
     slotStart = getSlot(file);
     instructionCount = extractSecondHW(readFromMemory(slotStart));
-    fullWords = 0;
-    copied = 0;
     slotStart = slotStart + 1; // where program start
     while (copied < instructionCount)
     {
-        movePackedData(
-            readFromMemory(slotStart + fullWords),
-            copied);
+        data = readFromMemory(slotStart + fullWords);
+        writeIntoMemory(copied, extractFirstHW(data));
+        writeIntoMemory(copied + 1, extractSecondHW(data));
         fullWords = fullWords + 1;
         copied = copied + 2;
     }
@@ -52,7 +45,6 @@ int execute(int file)
     // Update Process List
     writeIntoMemory(listPosition, 2);                  // Mark slot as executing
     writeIntoMemory(18443, file);                      // The leading process
-    writeIntoMemory(18444, readFromMemory(18444) + 1); // ProcessCount ++
 
     //Set Registers
     writeIntoMemory(registers, 0);        // SystemCall
@@ -154,29 +146,27 @@ void recoverState(int file)
 void kill(int process)
 {
     int state;
-    if (process > 9)
-        return;
-    state = readFromMemory(18432 + process);
-    writeIntoMemory(18432 + process, 1);
-    if (state > 1)
-        writeIntoMemory(18444, readFromMemory(18444) - 1);
+    if (process < 9)
+    {
+        state = readFromMemory(18432 + process);
+        writeIntoMemory(18432 + process, 1);
+    }
 }
 
 void continueExecution(int nextProgram)
 {
-    if (nextProgram == processInMemory)
-        return;
-    if (saveState(processInMemory) == null)
-        kill(processInMemory);
-    insertProcessIntoMemory(nextProgram);
-    recoverState(nextProgram);
+    if (nextProgram != processInMemory)
+    {
+        if (saveState(processInMemory) == null)
+            kill(processInMemory);
+        insertProcessIntoMemory(nextProgram);
+        recoverState(nextProgram);
+    }
 }
 
 int changeRunningProcess(void)
 {
     int nextAvailableProgram;
-    if (readFromMemory(18444) == 0)
-        return null;
     nextAvailableProgram = findNextProcess(processInMemory, 2);
     if (nextAvailableProgram == null)
         return null;
@@ -234,8 +224,6 @@ int main(void)
     if (systemCall == 2) // End Process
         kill(processInMemory);
     writeIntoMemory(registers, 0); // SystemCall = 0;
-    if (run != null)
-        return 0;
     while (run == null)
     {
         userInput = input();
