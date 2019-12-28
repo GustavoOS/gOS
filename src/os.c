@@ -159,6 +159,16 @@ void kill(int process)
         writeIntoMemory(18444, readFromMemory(18444) - 1);
 }
 
+void continueExecution(int programInMemory, int nextProgram)
+{
+    if (nextProgram == programInMemory)
+        return;
+    if (saveState(programInMemory) == null)
+        kill(programInMemory);
+    insertProcessIntoMemory(nextProgram);
+    recoverState(nextProgram);
+}
+
 int changeRunningProcess(int programInMemory)
 {
     int numberOfRunningPrograms;
@@ -169,14 +179,7 @@ int changeRunningProcess(int programInMemory)
     nextAvailableProgram = findNextProcess(programInMemory, 2);
     if (nextAvailableProgram == null)
         return null;
-
-    if (nextAvailableProgram == programInMemory)
-        return programInMemory;
-
-    if (saveState(programInMemory) == null)
-        kill(programInMemory);
-    insertProcessIntoMemory(nextAvailableProgram);
-    recoverState(nextAvailableProgram);
+    continueExecution(programInMemory, nextAvailableProgram);
     return nextAvailableProgram;
 }
 
@@ -190,8 +193,18 @@ int listProcess(int currentProgram, int condition)
     return next;
 }
 
-int resume(int process) {} //TODO
-void ioFlow(void) {}       //TODO
+int resume(int process)
+{
+    if(process > 9)
+        return null;
+    if (readFromMemory(18432 + process) < 2)
+        return null;
+    writeIntoMemory(18432 + process, 2);
+    continueExecution(readFromMemory(18442), process);
+    writeIntoMemory(18443, process); // The leading process
+}
+
+void ioFlow(void) {} //TODO
 
 int main(void)
 {
@@ -207,9 +220,10 @@ int main(void)
         run = changeRunningProcess(showing);
     if (systemCall == 1)
         ioFlow();
-    if (systemCall == 2)
+    if (systemCall == 2) // End Process
         kill(showing);
-    if(run != null)
+    write(registers, 0); // SystemCall = 0;
+    if (run != null)
         return 0;
     while (run == null)
     {
