@@ -227,7 +227,6 @@ int main(void)
     run = null;
     processInMemory = readFromMemory(registers);
     showing = processInMemory;
-    showing = readFromMemory(18442); // Program in Memory
     if (systemCall == 0)
         run = changeRunningProcess();
     if (systemCall == 1)
