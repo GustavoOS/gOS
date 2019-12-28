@@ -61,12 +61,9 @@ int execute(int file)
     return file;
 }
 
-int findNextProcess(int condition)
+int findNextProcess(int current, int condition)
 {
     int next;
-    int current;
-
-    current = readFromMemory(18442);
     next = current + 1;
 
     while (next != current)
@@ -77,7 +74,9 @@ int findNextProcess(int condition)
             return next;
         next = next + 1;
     }
-    return current;
+    if (readFromMemory(18432 + current) == condition)
+        return current;
+    return null;
 }
 
 int saveState(int program)
@@ -169,7 +168,10 @@ int changeRunningProcess(void)
     if (numberOfRunningPrograms == 0)
         return null;
     programInMemory = readFromMemory(18442);
-    nextAvailableProgram = findNextProcess(2);
+    nextAvailableProgram = findNextProcess(programInMemory, 2);
+    if (nextAvailableProgram == null)
+        return null;
+
     if (nextAvailableProgram == programInMemory)
         return programInMemory;
 
@@ -180,25 +182,37 @@ int changeRunningProcess(void)
     return nextAvailableProgram;
 }
 
-void listProcess(int condition) {} //TODO
-int resume(int process) {}         //TODO
-void ioFlow(void) {}               //TODO
+int listProcess(int currentProgram, int condition)
+{
+    int next;
+    next = findNextProcess(currentProgram, condition);
+    output(next);
+    if (next == null)
+        return currentProgram;
+    return next;
+}
+
+int resume(int process) {} //TODO
+void ioFlow(void) {}       //TODO
 
 int main(void)
 {
     int run;
     int userInput;
     int systemCall;
+    int showing;
     null = 0 - 1;
     run = null;
     systemCall = readFromMemory(registers);
+    showing = readFromMemory(18442);
     if (systemCall == 0)
         run = changeRunningProcess();
     if (systemCall == 1)
         ioFlow();
     if (systemCall == 2)
-        kill(readFromMemory(18442));
-
+        kill(showing);
+    if(run != null)
+        return 0;
     while (run == null)
     {
         userInput = input();
@@ -212,9 +226,9 @@ int main(void)
         if (userInput == 3)
             kill(input());
         if (userInput == 4)
-            listProcess(2);
+            showing = listProcess(showing, 2);
         if (userInput == 5)
-            listProcess(3);
+            showing = listProcess(showing, 3);
     }
 
     return 0;
