@@ -43,8 +43,8 @@ int execute(int file)
     insertProcessIntoMemory(file);
 
     // Update Process List
-    writeIntoMemory(listPosition, 2);                  // Mark slot as executing
-    writeIntoMemory(18443, file);                      // The leading process
+    writeIntoMemory(listPosition, 2); // Mark slot as executing
+    writeIntoMemory(18443, file);     // The leading process
 
     //Set Registers
     writeIntoMemory(registers, 0);        // SystemCall
@@ -198,11 +198,9 @@ int resume(int process)
 
 int ioFlow(void)
 {
+    writeIntoMemory(registers + 2, readFromMemory(registers + 2) + 1); // Avoid Loop
     if (processInMemory == readFromMemory(18443))
-    {
-        writeIntoMemory(registers + 2, readFromMemory(registers + 2) + 1); // Avoid Loop
         return processInMemory;
-    }
     writeIntoMemory(18432 + processInMemory, 3);
     return changeRunningProcess();
 }
