@@ -159,15 +159,13 @@ void kill(int process)
         writeIntoMemory(18444, readFromMemory(18444) - 1);
 }
 
-int changeRunningProcess(void)
+int changeRunningProcess(int programInMemory)
 {
     int numberOfRunningPrograms;
-    int programInMemory;
     int nextAvailableProgram;
     numberOfRunningPrograms = readFromMemory(18444);
     if (numberOfRunningPrograms == 0)
         return null;
-    programInMemory = readFromMemory(18442);
     nextAvailableProgram = findNextProcess(programInMemory, 2);
     if (nextAvailableProgram == null)
         return null;
@@ -204,9 +202,9 @@ int main(void)
     null = 0 - 1;
     run = null;
     systemCall = readFromMemory(registers);
-    showing = readFromMemory(18442);
+    showing = readFromMemory(18442); // Program in Memory
     if (systemCall == 0)
-        run = changeRunningProcess();
+        run = changeRunningProcess(showing);
     if (systemCall == 1)
         ioFlow();
     if (systemCall == 2)
