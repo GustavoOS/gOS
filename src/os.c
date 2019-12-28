@@ -2,6 +2,16 @@ int registers;
 int null;
 int processInMemory;
 
+int readFromRegister(int reg)
+{
+    return readFromMemory(registers + reg);
+}
+
+void writeIntoRegister(int reg, int value)
+{
+    writeIntoMemory(registers + reg, value);
+}
+
 int getSlot(int file)
 {
     return 18444 + (file * 1432);
@@ -16,7 +26,7 @@ void insertProcessIntoMemory(int file)
     int data;
 
     slotStart = getSlot(file);
-    instructionCount = extractSecondHW(readFromMemory(slotStart));
+    instructionCount = readFromMemory(slotStart);
     slotStart = slotStart + 1; // where program start
     while (copied < instructionCount)
     {
@@ -47,10 +57,9 @@ int execute(int file)
     writeIntoMemory(18443, file);     // The leading process
 
     //Set Registers
-    writeIntoMemory(registers, 0);        // SystemCall
-    writeIntoMemory(registers + 1, 0);    // SpecReg
-    writeIntoMemory(registers + 2, 0);    // PC
-    writeIntoMemory(registers + 3, 8191); // SP
+    writeIntoRegister(1, 0);    // SpecReg
+    writeIntoRegister(2, 0);    // PC
+    writeIntoRegister(3, 8191); // SP
     return file;
 }
 
@@ -79,9 +88,9 @@ int saveState(int program)
     int slot;
     int regStart;
     int maxSP;
-    stackpointer = readFromMemory(registers + 3);
+    stackpointer = readFromRegister(3);
     slot = getSlot(program);
-    codeSize = extractSecondHW(readFromMemory(slot));
+    codeSize = readFromMemory(slot);
     codeSize = (codeSize + 1) / 2;
     if (stackpointer - codeSize < 6769)
         return null; // Stack doesn't fit
@@ -89,15 +98,15 @@ int saveState(int program)
     regStart = getSlot(program + 1) - 1;
 
     // Save Registers
-    writeIntoMemory(regStart, readFromMemory(registers + 1));     // SpecReg
-    writeIntoMemory(regStart - 1, readFromMemory(registers + 2)); // PC
-    writeIntoMemory(regStart - 2, stackpointer);                  // SP
-    writeIntoMemory(regStart - 3, readFromMemory(registers + 4)); // Swap
-    writeIntoMemory(regStart - 4, readFromMemory(registers + 5)); // Return Address
-    writeIntoMemory(regStart - 5, readFromMemory(registers + 6)); // Global Pointer
-    writeIntoMemory(regStart - 6, readFromMemory(registers + 7)); // Frame Pointer
-    writeIntoMemory(regStart - 7, readFromMemory(registers + 8)); // Temporary Register
-    writeIntoMemory(regStart - 8, readFromMemory(registers + 9)); // Acumulator
+    writeIntoMemory(regStart, readFromRegister(1));     // SpecReg
+    writeIntoMemory(regStart - 1, readFromRegister(2)); // PC
+    writeIntoMemory(regStart - 2, stackpointer);        // SP
+    writeIntoMemory(regStart - 3, readFromRegister(4)); // Swap
+    writeIntoMemory(regStart - 4, readFromRegister(5)); // Return Address
+    writeIntoMemory(regStart - 5, readFromRegister(6)); // Global Pointer
+    writeIntoMemory(regStart - 6, readFromRegister(7)); // Frame Pointer
+    writeIntoMemory(regStart - 7, readFromRegister(8)); // Temporary Register
+    writeIntoMemory(regStart - 8, readFromRegister(9)); // Acumulator
 
     // Save Stack
     slot = slot + codeSize + 1;
@@ -121,15 +130,15 @@ void recoverState(int file)
     stackpointer = readFromMemory(regStart - 2);
     maxSP = 8192;
     //Save registers
-    writeIntoMemory(registers + 1, readFromMemory(regStart));     // SpecReg
-    writeIntoMemory(registers + 2, readFromMemory(regStart - 1)); // PC
-    writeIntoMemory(registers + 3, stackpointer);                 // SP
-    writeIntoMemory(registers + 4, readFromMemory(regStart - 3)); // Swap
-    writeIntoMemory(registers + 5, readFromMemory(regStart - 4)); // Return Address
-    writeIntoMemory(registers + 6, readFromMemory(regStart - 5)); // Global Pointer
-    writeIntoMemory(registers + 7, readFromMemory(regStart - 6)); // Frame Pointer
-    writeIntoMemory(registers + 8, readFromMemory(regStart - 7)); // Temporary Register
-    writeIntoMemory(registers + 9, readFromMemory(regStart - 8)); // Acumulator
+    writeIntoRegister(1, readFromMemory(regStart));     // SpecReg
+    writeIntoRegister(2, readFromMemory(regStart - 1)); // PC
+    writeIntoRegister(3, stackpointer);                 // SP
+    writeIntoRegister(4, readFromMemory(regStart - 3)); // Swap
+    writeIntoRegister(5, readFromMemory(regStart - 4)); // Return Address
+    writeIntoRegister(6, readFromMemory(regStart - 5)); // Global Pointer
+    writeIntoRegister(7, readFromMemory(regStart - 6)); // Frame Pointer
+    writeIntoRegister(8, readFromMemory(regStart - 7)); // Temporary Register
+    writeIntoRegister(9, readFromMemory(regStart - 8)); // Acumulator
 
     regStart = getSlot(file);
     codeSize = extractSecondHW(readFromMemory(regStart));
@@ -198,7 +207,7 @@ int resume(int process)
 
 int ioFlow(void)
 {
-    writeIntoMemory(registers + 2, readFromMemory(registers + 2) + 1); // Avoid Loop
+    writeIntoRegister(2, readFromRegister(2) + 1); // Avoid Loop
     if (processInMemory == readFromMemory(18443))
         return processInMemory;
     writeIntoMemory(18432 + processInMemory, 3);
@@ -215,7 +224,8 @@ int main(void)
     greetings = 45141;
     null = 0 - 1;
     run = null;
-    processInMemory = readFromMemory(registers);
+    systemCall = readFromRegister(0);
+    processInMemory = readFromMemory(18442);
     showing = processInMemory;
     if (systemCall == 0)
         run = changeRunningProcess();
@@ -223,7 +233,6 @@ int main(void)
         run = ioFlow();
     if (systemCall == 2) // End Process
         kill(processInMemory);
-    writeIntoMemory(registers, 0); // SystemCall = 0;
 
     output(greetings);
     while (run == null)
