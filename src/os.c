@@ -233,7 +233,7 @@ int main(void)
         run = ioFlow();
     if (systemCall == 2) // End Process
         kill(processInMemory);
-    write(registers, 0); // SystemCall = 0;
+    writeIntoMemory(registers, 0); // SystemCall = 0;
     if (run != null)
         return 0;
     while (run == null)
