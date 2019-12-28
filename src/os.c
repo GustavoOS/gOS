@@ -1,5 +1,6 @@
 int registers;
 int null;
+int processInMemory;
 
 int getSlot(int file)
 {
@@ -153,33 +154,33 @@ void recoverState(int file)
 void kill(int process)
 {
     int state;
+    if (process > 9)
+        return;
     state = readFromMemory(18432 + process);
     writeIntoMemory(18432 + process, 1);
     if (state > 1)
         writeIntoMemory(18444, readFromMemory(18444) - 1);
 }
 
-void continueExecution(int programInMemory, int nextProgram)
+void continueExecution(int nextProgram)
 {
-    if (nextProgram == programInMemory)
+    if (nextProgram == processInMemory)
         return;
-    if (saveState(programInMemory) == null)
-        kill(programInMemory);
+    if (saveState(processInMemory) == null)
+        kill(processInMemory);
     insertProcessIntoMemory(nextProgram);
     recoverState(nextProgram);
 }
 
-int changeRunningProcess(int programInMemory)
+int changeRunningProcess(void)
 {
-    int numberOfRunningPrograms;
     int nextAvailableProgram;
-    numberOfRunningPrograms = readFromMemory(18444);
-    if (numberOfRunningPrograms == 0)
+    if (readFromMemory(18444) == 0)
         return null;
-    nextAvailableProgram = findNextProcess(programInMemory, 2);
+    nextAvailableProgram = findNextProcess(processInMemory, 2);
     if (nextAvailableProgram == null)
         return null;
-    continueExecution(programInMemory, nextAvailableProgram);
+    continueExecution(nextAvailableProgram);
     return nextAvailableProgram;
 }
 
@@ -195,16 +196,26 @@ int listProcess(int currentProgram, int condition)
 
 int resume(int process)
 {
-    if(process > 9)
+    if (process > 9)
         return null;
     if (readFromMemory(18432 + process) < 2)
         return null;
     writeIntoMemory(18432 + process, 2);
-    continueExecution(readFromMemory(18442), process);
+    continueExecution(process);
     writeIntoMemory(18443, process); // The leading process
+    return process;
 }
 
-void ioFlow(void) {} //TODO
+int ioFlow(void)
+{
+    if (processInMemory == readFromMemory(18443))
+    {
+        writeIntoMemory(registers + 2, readFromMemory(registers + 2) + 1); // Avoid Loop
+        return processInMemory;
+    }
+    writeIntoMemory(18432 + processInMemory, 3);
+    return changeRunningProcess();
+}
 
 int main(void)
 {
@@ -214,14 +225,15 @@ int main(void)
     int showing;
     null = 0 - 1;
     run = null;
-    systemCall = readFromMemory(registers);
+    processInMemory = readFromMemory(registers);
+    showing = processInMemory;
     showing = readFromMemory(18442); // Program in Memory
     if (systemCall == 0)
-        run = changeRunningProcess(showing);
+        run = changeRunningProcess();
     if (systemCall == 1)
-        ioFlow();
+        run = ioFlow();
     if (systemCall == 2) // End Process
-        kill(showing);
+        kill(processInMemory);
     write(registers, 0); // SystemCall = 0;
     if (run != null)
         return 0;
