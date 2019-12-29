@@ -67,14 +67,15 @@ int findNextProcess(int current, int condition)
 {
     int next;
     next = current + 1;
-
+    if (next > 9)
+        next = 0;
     while (next != current)
     {
-        if (next > 9)
-            next = 0;
         if (readFromMemory(18432 + next) == condition)
             return next;
         next = next + 1;
+        if (next > 9)
+            next = 0;
     }
     if (readFromMemory(18432 + current) == condition)
         return current;
@@ -185,7 +186,6 @@ int listProcess(int currentProgram, int condition)
 {
     int next;
     next = findNextProcess(currentProgram, condition);
-    output(next);
     if (next == null)
         return currentProgram;
     return next;
@@ -205,7 +205,7 @@ int resume(int process)
 
 int ioFlow(void)
 {
-    writeIntoRegister(2, readFromRegister(2) + 1); // Avoid Loop
+    writeIntoRegister(2, readFromRegister(2) + 1); // PC++ to avoid loop
     if (processInMemory == readFromMemory(18443))
         return processInMemory;
     writeIntoMemory(18432 + processInMemory, 3);
@@ -232,24 +232,37 @@ int main(void)
     if (systemCall == 2) // End Process
         kill(processInMemory);
 
-    output(greetings);
     while (run == null)
     {
+        output(0);
         userInput = input();
 
         if (userInput == 0)
-            output(greetings); // gOS
-        if (userInput == 1)
+        {
+            output(58860); // Code
             run = execute(input());
-        if (userInput == 2)
-            run = resume(input());
-        if (userInput == 3)
-            kill(input());
-        if (userInput == 4)
+        }
+        if (userInput == 1)
+        {
+            output(2826); // B0A
             showing = listProcess(showing, 2);
-        if (userInput == 5)
+        }
+        if (userInput == 2)
+        {
+            output(212724432); // CADEADO
             showing = listProcess(showing, 3);
+        }
+        if (userInput == 3)
+        {
+            output(51966); // Cafe
+            run = resume(input());
+        }
+        if (userInput == 4)
+        {
+            output(64202); // Faca
+            kill(input());
+        }
     }
-
+    output(49568);
     return 0;
 }
