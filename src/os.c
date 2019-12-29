@@ -101,12 +101,11 @@ int saveState(int program)
     writeIntoMemory(regStart, readFromRegister(1));     // SpecReg
     writeIntoMemory(regStart - 1, readFromRegister(2)); // PC
     writeIntoMemory(regStart - 2, stackpointer);        // SP
-    writeIntoMemory(regStart - 3, readFromRegister(4)); // Swap
-    writeIntoMemory(regStart - 4, readFromRegister(5)); // Return Address
-    writeIntoMemory(regStart - 5, readFromRegister(6)); // Global Pointer
-    writeIntoMemory(regStart - 6, readFromRegister(7)); // Frame Pointer
-    writeIntoMemory(regStart - 7, readFromRegister(8)); // Temporary Register
-    writeIntoMemory(regStart - 8, readFromRegister(9)); // Acumulator
+    writeIntoMemory(regStart - 3, readFromRegister(4)); // Return Address
+    writeIntoMemory(regStart - 4, readFromRegister(5)); // Global Pointer
+    writeIntoMemory(regStart - 5, readFromRegister(6)); // Frame Pointer
+    writeIntoMemory(regStart - 6, readFromRegister(7)); // Temporary Register
+    writeIntoMemory(regStart - 7, readFromRegister(8)); // Acumulator
 
     // Save Stack
     slot = slot + codeSize + 1;
@@ -133,12 +132,11 @@ void recoverState(int file)
     writeIntoRegister(1, readFromMemory(regStart));     // SpecReg
     writeIntoRegister(2, readFromMemory(regStart - 1)); // PC
     writeIntoRegister(3, stackpointer);                 // SP
-    writeIntoRegister(4, readFromMemory(regStart - 3)); // Swap
-    writeIntoRegister(5, readFromMemory(regStart - 4)); // Return Address
-    writeIntoRegister(6, readFromMemory(regStart - 5)); // Global Pointer
-    writeIntoRegister(7, readFromMemory(regStart - 6)); // Frame Pointer
-    writeIntoRegister(8, readFromMemory(regStart - 7)); // Temporary Register
-    writeIntoRegister(9, readFromMemory(regStart - 8)); // Acumulator
+    writeIntoRegister(4, readFromMemory(regStart - 3)); // Return Address
+    writeIntoRegister(5, readFromMemory(regStart - 4)); // Global Pointer
+    writeIntoRegister(6, readFromMemory(regStart - 5)); // Frame Pointer
+    writeIntoRegister(7, readFromMemory(regStart - 6)); // Temporary Register
+    writeIntoRegister(8, readFromMemory(regStart - 7)); // Acumulator
 
     regStart = getSlot(file);
     codeSize = extractSecondHW(readFromMemory(regStart));
