@@ -186,6 +186,7 @@ int listProcess(int currentProgram, int condition)
 {
     int next;
     next = findNextProcess(currentProgram, condition);
+    output(next);
     if (next == null)
         return currentProgram;
     return next;
@@ -239,7 +240,7 @@ int main(void)
 
         if (userInput == 0)
         {
-            output(58860); // Code
+            output(49374); // Code
             run = execute(input());
         }
         if (userInput == 1)
