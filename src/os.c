@@ -264,6 +264,7 @@ int main(void)
             kill(input());
         }
     }
-    output(49568);
+
+    output(3248488448 + run); // CIAO + Process
     return 0;
 }
