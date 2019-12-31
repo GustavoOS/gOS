@@ -156,8 +156,10 @@ void kill(int process)
     int state;
     if (process < 9)
     {
+        output(4207542272 + process); // Faca
         state = readFromMemory(18432 + process);
-        writeIntoMemory(18432 + process, 1);
+        state = state / state; // Division by 0 is defined as 0 in the ALU
+        writeIntoMemory(18432 + process, state);
     }
 }
 
@@ -219,8 +221,6 @@ int main(void)
     int userInput;
     int systemCall;
     int showing;
-    int greetings;
-    greetings = 45141;
     null = 0 - 1;
     run = null;
     systemCall = readFromRegister(0);
@@ -256,12 +256,11 @@ int main(void)
         if (userInput == 3)
         {
             output(51966); // Cafe
-            run = resume(input());
+            run = resume(showing);
         }
         if (userInput == 4)
         {
-            output(64202); // Faca
-            kill(input());
+            kill(showing);
         }
     }
 
