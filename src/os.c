@@ -122,14 +122,14 @@ void saveState(void)
         writeIntoMemory(regStart - 6, readFromRegister(7)); // Temporary Register
         writeIntoMemory(regStart - 7, readFromRegister(8)); // Acumulator
 
-        // Save Stack
-        slot = slot + codeSize + 1;
-        while (stackpointer < 8192)
-        {
-            writeIntoMemory(slot, readFromMemory(stackpointer));
-            stackpointer = stackpointer + 1;
-            slot = slot + 1;
-        }
+        // // Save Stack
+        // slot = slot + codeSize + 1;
+        // while (stackpointer < 8192)
+        // {
+        //     writeIntoMemory(slot, readFromMemory(stackpointer));
+        //     stackpointer = stackpointer + 1;
+        //     slot = slot + 1;
+        // }
     }
     else
         kill(processInMemory);
@@ -155,16 +155,16 @@ void recoverState(int file)
     writeIntoRegister(7, readFromMemory(regStart - 6)); // Temporary Register
     writeIntoRegister(8, readFromMemory(regStart - 7)); // Acumulator
 
-    regStart = getSlot(file);
-    codeSize = extractSecondHW(readFromMemory(regStart));
-    codeSize = (codeSize + 1) / 2;
-    regStart = regStart + codeSize + 1;
-    while (stackpointer < maxSP)
-    {
-        writeIntoMemory(stackpointer, readFromMemory(regStart));
-        stackpointer = stackpointer + 1;
-        regStart = regStart + 1;
-    }
+    // regStart = getSlot(file);
+    // codeSize = extractSecondHW(readFromMemory(regStart));
+    // codeSize = (codeSize + 1) / 2;
+    // regStart = regStart + codeSize + 1;
+    // while (stackpointer < maxSP)
+    // {
+    //     writeIntoMemory(stackpointer, readFromMemory(regStart));
+    //     stackpointer = stackpointer + 1;
+    //     regStart = regStart + 1;
+    // }
 }
 
 void continueExecution(int nextProgram)
