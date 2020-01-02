@@ -82,42 +82,56 @@ int findNextProcess(int current, int condition)
     return null;
 }
 
-int saveState(int program)
+void kill(int process)
+{
+    int state;
+    if (process < 10)
+    {
+        if (processInMemory != null)
+        {
+            output(4207542272 + process); // Faca
+            state = readFromMemory(18432 + process);
+            state = state / state; // Division by 0 is defined as 0 in the ALU
+            writeIntoMemory(18432 + process, state);
+        }
+    }
+}
+
+void saveState(void)
 {
     int codeSize;
     int stackpointer;
     int slot;
     int regStart;
-    int maxSP;
     stackpointer = readFromRegister(3);
-    slot = getSlot(program);
+    slot = getSlot(processInMemory);
     codeSize = readFromMemory(slot);
     codeSize = (codeSize + 1) / 2;
-    if (stackpointer - codeSize < 6769)
-        return null; // Stack doesn't fit
-
-    regStart = getSlot(program + 1) - 1;
-
-    // Save Registers
-    writeIntoMemory(regStart, readFromRegister(1));     // SpecReg
-    writeIntoMemory(regStart - 1, readFromRegister(2)); // PC
-    writeIntoMemory(regStart - 2, stackpointer);        // SP
-    writeIntoMemory(regStart - 3, readFromRegister(4)); // Return Address
-    writeIntoMemory(regStart - 4, readFromRegister(5)); // Global Pointer
-    writeIntoMemory(regStart - 5, readFromRegister(6)); // Frame Pointer
-    writeIntoMemory(regStart - 6, readFromRegister(7)); // Temporary Register
-    writeIntoMemory(regStart - 7, readFromRegister(8)); // Acumulator
-
-    // Save Stack
-    slot = slot + codeSize + 1;
-    maxSP = 8192;
-    while (stackpointer < maxSP)
+    if (stackpointer - codeSize > 6770) // If Stack Fits
     {
-        writeIntoMemory(slot, readFromMemory(stackpointer));
-        stackpointer = stackpointer + 1;
-        slot = slot + 1;
+        regStart = getSlot(processInMemory + 1) - 1;
+
+        // Save Registers
+        writeIntoMemory(regStart, readFromRegister(1));     // SpecReg
+        writeIntoMemory(regStart - 1, readFromRegister(2)); // PC
+        writeIntoMemory(regStart - 2, stackpointer);        // SP
+        writeIntoMemory(regStart - 3, readFromRegister(4)); // Return Address
+        writeIntoMemory(regStart - 4, readFromRegister(5)); // Global Pointer
+        writeIntoMemory(regStart - 5, readFromRegister(6)); // Frame Pointer
+        writeIntoMemory(regStart - 6, readFromRegister(7)); // Temporary Register
+        writeIntoMemory(regStart - 7, readFromRegister(8)); // Acumulator
+
+        // Save Stack
+        slot = slot + codeSize + 1;
+        while (stackpointer < 8192)
+        {
+            writeIntoMemory(slot, readFromMemory(stackpointer));
+            stackpointer = stackpointer + 1;
+            slot = slot + 1;
+        }
     }
-    return 0;
+    else
+        kill(processInMemory);
 }
 
 void recoverState(int file)
@@ -151,27 +165,11 @@ void recoverState(int file)
     }
 }
 
-void kill(int process)
-{
-    int state;
-    if (process < 9)
-    {
-        output(4207542272 + process); // Faca
-        state = readFromMemory(18432 + process);
-        state = state / state; // Division by 0 is defined as 0 in the ALU
-        writeIntoMemory(18432 + process, state);
-    }
-}
-
 void continueExecution(int nextProgram)
 {
     if (nextProgram != processInMemory)
-    {
-        if (saveState(processInMemory) == null)
-            kill(processInMemory);
         insertProcessIntoMemory(nextProgram);
-        recoverState(nextProgram);
-    }
+    recoverState(nextProgram);
 }
 
 int changeRunningProcess(void)
@@ -196,18 +194,23 @@ int listProcess(int currentProgram, int condition)
 
 int resume(int process)
 {
-    if (process > 9)
-        return null;
-    if (readFromMemory(18432 + process) < 2)
-        return null;
-    writeIntoMemory(18432 + process, 2);
-    continueExecution(process);
-    writeIntoMemory(18443, process); // The leading process
-    return process;
+    if (process != null)
+    {
+        if (readFromMemory(18432 + process) > 1)
+        {
+            output(51966); // Cafe
+            writeIntoMemory(18432 + process, 2);
+            continueExecution(process);
+            writeIntoMemory(18443, process); // The leading process
+            return process;
+        }
+    }
+    return null;
 }
 
 int ioFlow(void)
 {
+    output(16);
     writeIntoRegister(2, readFromRegister(2) + 1); // PC++ to avoid loop
     if (processInMemory == readFromMemory(18443))
         return processInMemory;
@@ -232,6 +235,8 @@ int main(void)
         run = ioFlow();
     if (systemCall == 2) // End Process
         kill(processInMemory);
+    if (systemCall == 3) // User Preemption
+        saveState();
 
     while (run == null)
     {
@@ -255,7 +260,7 @@ int main(void)
         }
         if (userInput == 3)
         {
-            output(51966); // Cafe
+            // CAFE
             run = resume(showing);
         }
         if (userInput == 4)
