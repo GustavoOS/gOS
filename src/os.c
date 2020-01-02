@@ -167,8 +167,7 @@ void recoverState(int file)
 
 void continueExecution(int nextProgram)
 {
-    if (nextProgram != processInMemory)
-        insertProcessIntoMemory(nextProgram);
+    insertProcessIntoMemory(nextProgram);
     recoverState(nextProgram);
 }
 
@@ -182,15 +181,6 @@ int changeRunningProcess(void)
     return nextAvailableProgram;
 }
 
-int listProcess(int currentProgram, int condition)
-{
-    int next;
-    next = findNextProcess(currentProgram, condition);
-    output(next);
-    if (next == null)
-        return currentProgram;
-    return next;
-}
 
 int resume(int process)
 {
@@ -229,6 +219,8 @@ int main(void)
     systemCall = readFromRegister(0);
     processInMemory = readFromMemory(18442);
     showing = processInMemory;
+    output(systemCall);
+
     if (systemCall == 0)
         run = changeRunningProcess();
     if (systemCall == 1)
@@ -251,12 +243,14 @@ int main(void)
         if (userInput == 1)
         {
             output(2826); // B0A
-            showing = listProcess(showing, 2);
+            showing = findNextProcess(showing, 2);
+            output(showing);
         }
         if (userInput == 2)
         {
             output(212724432); // CADEADO
-            showing = listProcess(showing, 3);
+            showing = findNextProcess(showing, 3);
+            output(showing);
         }
         if (userInput == 3)
         {
