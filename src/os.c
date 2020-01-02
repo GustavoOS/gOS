@@ -114,6 +114,7 @@ void saveState(void)
         // Save Registers
         writeIntoMemory(regStart, readFromRegister(1));     // SpecReg
         writeIntoMemory(regStart - 1, readFromRegister(2)); // PC
+        output(readFromRegister(1));
         writeIntoMemory(regStart - 2, stackpointer);        // SP
         writeIntoMemory(regStart - 3, readFromRegister(4)); // Return Address
         writeIntoMemory(regStart - 4, readFromRegister(5)); // Global Pointer
@@ -146,6 +147,7 @@ void recoverState(int file)
     //Save registers
     writeIntoRegister(1, readFromMemory(regStart));     // SpecReg
     writeIntoRegister(2, readFromMemory(regStart - 1)); // PC
+    output(readFromRegister(1));
     writeIntoRegister(3, stackpointer);                 // SP
     writeIntoRegister(4, readFromMemory(regStart - 3)); // Return Address
     writeIntoRegister(5, readFromMemory(regStart - 4)); // Global Pointer
@@ -182,14 +184,17 @@ int changeRunningProcess(void)
 }
 
 
-int resume(int process)
+int resume(void)
 {
-    if (process != null)
+    int process;
+    int stateSlot;
+    process = input();
+    if (process < 10)
     {
-        if (readFromMemory(18432 + process) > 1)
+        stateSlot = 18432 + process;
+        if (1 < readFromMemory(stateSlot))
         {
-            output(51966); // Cafe
-            writeIntoMemory(18432 + process, 2);
+            writeIntoMemory(stateSlot, 2);
             continueExecution(process);
             writeIntoMemory(18443, process); // The leading process
             return process;
@@ -200,7 +205,6 @@ int resume(int process)
 
 int ioFlow(void)
 {
-    output(16);
     writeIntoRegister(2, readFromRegister(2) + 1); // PC++ to avoid loop
     if (processInMemory == readFromMemory(18443))
         return processInMemory;
@@ -254,8 +258,8 @@ int main(void)
         }
         if (userInput == 3)
         {
-            // CAFE
-            run = resume(showing);
+            output(51966); // Cafe
+            run = resume();
         }
         if (userInput == 4)
         {
