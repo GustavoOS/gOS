@@ -1,31 +1,17 @@
-int hdStart;
-int osAddress;
-
-void insertOSIntoMemory(void)
+int main(void)
 {
     int osLength;
     int index;
-    int srcAddr;
-    int targetAddr;
 
-    osLength = readFromMemory(hdStart);
+    osLength = readFromMemory(16384);
     index = 0;
-    srcAddr = hdStart + 1;
-    targetAddr = osAddress;
     while (index < osLength)
     {
-        writeIntoMemory(targetAddr + index,
-                        readFromMemory(srcAddr + index));
+        writeIntoMemory(2048 + index,
+                        readFromMemory(16385 + index));
         index = index + 1;
     }
-    output(readFromMemory(osLength + osAddress - 1));
-}
-
-int main(void)
-{
-    osAddress = 2048;
-    hdStart = 16384;
-    insertOSIntoMemory();
+    output(readFromMemory(osLength + 2047));
     output(49568);
     return 0;
 }
