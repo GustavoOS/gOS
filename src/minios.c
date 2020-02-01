@@ -1,6 +1,71 @@
 int registers;
 int null;
 
+// void printRegisters(void)
+// {
+//     output(readFromMemory(6135));
+//     output(readFromMemory(6136));
+//     output(readFromMemory(6137));
+//     output(readFromMemory(6138));
+//     output(readFromMemory(6139));
+//     output(readFromMemory(6140));
+//     output(readFromMemory(6141));
+//     output(readFromMemory(6142));
+// }
+
+// void printStack(void)
+// {
+//     int sp;
+
+//     sp = readFromMemory(6137);
+//     while (sp < 8192)
+//     {
+//         output(sp);
+//         output(readFromMemory(sp));
+//         sp = sp + 1;
+//     }
+// }
+
+void saveStack(void)
+{
+    int fileIndex;
+    int stackIndex;
+    int sp;
+    int item;
+
+    fileIndex = 19859;
+    stackIndex = 8191;
+    sp = readFromMemory(6137);
+
+    while (sp < (stackIndex + 1))
+    {
+        item = readFromMemory(stackIndex);
+        writeIntoMemory(fileIndex, item);
+        stackIndex = stackIndex - 1;
+        fileIndex = fileIndex - 1;
+    }
+}
+
+void loadStack(void)
+{
+    int fileIndex;
+    int stackIndex;
+    int sp;
+    int item;
+
+    fileIndex = 19859;
+    stackIndex = 8191;
+    sp = readFromMemory(6137);
+
+    while (sp < (stackIndex + 1))
+    {
+        item = readFromMemory(fileIndex);
+        writeIntoMemory(stackIndex, item);
+        stackIndex = stackIndex - 1;
+        fileIndex = fileIndex - 1;
+    }
+}
+
 void insertProgramIntoMemory(void)
 {
     int instructionCount;
@@ -41,16 +106,7 @@ void continueProcess(void)
     writeIntoMemory(registers + 2, readFromMemory(19874)); // PC
     writeIntoMemory(registers + 1, readFromMemory(19875)); // SpecReg
 
-    // Recover Stack
-    stackIndex = readFromMemory(18444);
-    stackIndex = (stackIndex + 1) / 2;
-    stackIndex = 18445 + stackIndex;
-    while (stackpointer < 8191)
-    {
-        writeIntoMemory(stackpointer, readFromMemory(stackIndex));
-        stackpointer = stackpointer + 1;
-        stackIndex = stackIndex + 1;
-    }
+    loadStack();
 }
 
 void runNewProcess(void)
@@ -113,9 +169,10 @@ void saveState(void)
     stackpointer = readFromMemory(registers + 3);
     codeSize = readFromMemory(18444);
     codeSize = (codeSize + 1) / 2;
-    if (stackpointer - codeSize > 6769) // If Stack Fits
-        return;
 
+    if (stackpointer < 6776 + codeSize)
+        return;
+    // printRegisters();
     // Save Registers
     writeIntoMemory(19868, readFromMemory(registers + 8)); // Acumulator
     writeIntoMemory(19869, readFromMemory(registers + 7)); // Temporary Register
@@ -126,14 +183,16 @@ void saveState(void)
     writeIntoMemory(19874, readFromMemory(registers + 2)); // PC
     writeIntoMemory(19875, readFromMemory(registers + 1)); // SpecReg
 
-    // Save Stack
-    savedStackItemAddr = 18445 + codeSize;
-    while (stackpointer < 8191)
-    {
-        writeIntoMemory(savedStackItemAddr, readFromMemory(stackpointer));
-        stackpointer = stackpointer + 1;
-        savedStackItemAddr = savedStackItemAddr + 1;
-    }
+    // printStack();
+    // // Save Stack
+    // savedStackItemAddr = 18445 + codeSize;
+    // while (stackpointer < 8191)
+    // {
+    //     writeIntoMemory(savedStackItemAddr, readFromMemory(stackpointer));
+    //     stackpointer = stackpointer + 1;
+    //     savedStackItemAddr = savedStackItemAddr + 1;
+    // }
+    saveStack();
 }
 
 int dispatchSystemCalls(int systemCall)
@@ -152,7 +211,6 @@ int main(void)
 
     // Set Variables
     null = 0 - 1;
-
     run = dispatchSystemCalls(readFromMemory(registers));
     if (run == null)
         takeUserAction();
