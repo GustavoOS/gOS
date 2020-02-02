@@ -180,7 +180,7 @@ void resume(void)
     writeIntoMemory(statusTable + 11, nextProgram); // The leading process
 }
 
-void ioFlow(void)
+void processIORequest(void)
 {
     writeIntoMemory(registers + 2,
                     readFromMemory(registers + 2) + 1); // PC++
@@ -232,7 +232,7 @@ void dispatchSystemCalls(int systemCall)
 {
     output(systemCall);
     if (systemCall == 1)
-        ioFlow();
+        processIORequest();
     if (systemCall == 3)
         saveState();
 }
