@@ -64,8 +64,6 @@ int findNextProcess(int current, int condition)
 
 void validateNextProgram(int candidate)
 {
-    if (candidate == null)
-        return;
     if (candidate > 9)
         return;
     if (readFromMemory(statusTable + candidate) == 0)
