@@ -2,20 +2,21 @@ int registers;
 int null;
 int processInMemory;
 int statusTable;
+int nextProgram;
 
 int getSlot(int file)
 {
     return (file * 1432) + statusTable + 12;
 }
 
-void insertProgramIntoMemory(int file)
+void insertProgramIntoMemory(void)
 {
     int instructionCount;
     int copied;
     int slotStart;
     int data;
 
-    slotStart = getSlot(file);
+    slotStart = getSlot(nextProgram);
     instructionCount = readFromMemory(slotStart);
     slotStart = slotStart + 1; // where program starts
     copied = 0;
@@ -26,17 +27,20 @@ void insertProgramIntoMemory(int file)
         writeIntoMemory(copied + 1, extractSecondHW(data));
         copied = copied + 2;
     }
-    writeIntoMemory(statusTable + 10, file); // In memory
+    writeIntoMemory(statusTable + 10, nextProgram); // In memory
 }
 
-void execute(int file)
+void execute(void)
 {
-    insertProgramIntoMemory(file);
+    insertProgramIntoMemory();
     //Set Registers
     writeIntoMemory(registers + 1, 0);    // SpecReg
     writeIntoMemory(registers + 2, 0);    // PC
     writeIntoMemory(registers + 3, 8191); // SP
     writeIntoMemory(registers + 8, 0);    // Acumulator
+
+    writeIntoMemory(statusTable + 11, nextProgram); // Leading process
+    writeIntoMemory(statusTable + nextProgram, 2);  // Running
 }
 
 int findNextProcess(int current, int condition)
@@ -58,28 +62,35 @@ int findNextProcess(int current, int condition)
     return null;
 }
 
+void validateNextProgram(int candidate)
+{
+    if (candidate == null)
+        return;
+    if (candidate > 9)
+        return;
+    if (readFromMemory(statusTable + candidate) == 0)
+        return;
+    nextProgram = candidate;
+}
+
 void kill(int process)
 {
     int state;
-    if (process < 10)
-    {
-        if (processInMemory != null)
-        {
-            output(4207542272 + process); // Faca
-            state = readFromMemory(statusTable + process);
-            state = state / state; // Division by 0 is defined as 0 in the ALU
-            writeIntoMemory(statusTable + process, state);
-        }
-    }
+    validateNextProgram(process);
+    if (nextProgram == null)
+        return;
+    output(4207542272 + process); // Faca
+    state = readFromMemory(statusTable + process);
+    state = state / state;
+    writeIntoMemory(statusTable + process, state);
+    nextProgram = null;
 }
 
-void saveStack(void)
+void saveStack(int fileIndex)
 {
-    int fileIndex;
     int stackIndex;
     int sp;
 
-    fileIndex = 19859;
     stackIndex = 8192;
     sp = readFromMemory(registers + 3);
 
@@ -91,16 +102,22 @@ void saveStack(void)
     }
 }
 
-void saveState(int slot)
+void saveState(void)
 {
     int stackpointer;
     int minSP;
+    int slot;
+    slot = getSlot(processInMemory);
     stackpointer = readFromMemory(registers + 3);
     minSP = readFromMemory(slot) + 1;
     minSP = (minSP / 2) + 6777;
 
     if (stackpointer < minSP)
+    {
+        kill(processInMemory);
         return;
+    }
+
     slot = slot + 1431;
 
     writeIntoMemory(slot - 7, readFromMemory(registers + 8)); // Acumulator
@@ -112,15 +129,14 @@ void saveState(int slot)
     writeIntoMemory(slot - 1, readFromMemory(registers + 2)); // PC
     writeIntoMemory(slot, readFromMemory(registers + 1));     // SpecReg
 
-    saveStack();
+    saveStack(slot - 16);
 }
-void loadStack(void)
+
+void loadStack(int fileIndex)
 {
-    int fileIndex;
     int stackIndex;
     int sp;
 
-    fileIndex = 19859;
     stackIndex = 8192;
     sp = readFromMemory(registers + 3);
 
@@ -132,11 +148,11 @@ void loadStack(void)
     }
 }
 
-void continueExecution(int pgm)
+void continueExecution(void)
 {
     int slotEnd;
-    insertProgramIntoMemory(pgm);
-    slotEnd = getSlot(pgm) + 1431;
+    insertProgramIntoMemory();
+    slotEnd = getSlot(nextProgram) + 1431;
     // Load registers
     writeIntoMemory(registers + 8, readFromMemory(slotEnd - 7)); // Acumulator
     writeIntoMemory(registers + 7, readFromMemory(slotEnd - 6)); // Temporary Register
@@ -147,54 +163,43 @@ void continueExecution(int pgm)
     writeIntoMemory(registers + 2, readFromMemory(slotEnd - 1)); // PC
     writeIntoMemory(registers + 1, readFromMemory(slotEnd));     // SpecReg
 
-    loadStack();
+    loadStack(slotEnd - 16);
 }
 
-int changeRunningProcess(void)
+void changeRunningProcess(void)
 {
-    int nextAvailableProgram;
-    nextAvailableProgram = findNextProcess(processInMemory, 2);
-    if (nextAvailableProgram == null)
-        return null;
-    continueExecution(nextAvailableProgram);
-    return nextAvailableProgram;
+    saveState();
+    validateNextProgram(findNextProcess(processInMemory, 2));
+    if (nextProgram == null)
+        return;
+    continueExecution();
 }
 
-int resume(void)
+void resume(void)
 {
-    int process;
-    int stateSlot;
-    process = input();
-    if (process < 10)
-    {
-        stateSlot = statusTable + process;
-        if (1 < readFromMemory(stateSlot))
-        {
-            writeIntoMemory(stateSlot, 2);
-            continueExecution(process);
-            writeIntoMemory(statusTable + 11, process); // The leading process
-            return process;
-        }
-    }
-    return null;
+    writeIntoMemory(statusTable + nextProgram, 2);
+    continueExecution();
+    writeIntoMemory(statusTable + 11, nextProgram); // The leading process
 }
 
-int ioFlow(void)
+void ioFlow(void)
 {
     writeIntoMemory(registers + 2,
                     readFromMemory(registers + 2) + 1); // PC++
-    // if (processInMemory == readFromMemory(18443))
-    //     return processInMemory;
-    // writeIntoMemory(18432 + processInMemory, 3);
-    return 0;
-    // return changeRunningProcess();
+    if (processInMemory == readFromMemory(statusTable + 11))
+    {
+        nextProgram = processInMemory;
+        return;
+    }
+    writeIntoMemory(statusTable + processInMemory, 3); // Block
+    changeRunningProcess();
 }
 
 void takeUserAction(void)
 {
     int menu;
     menu = 0;
-    while (menu == menu)
+    while (nextProgram == null)
     {
         if (menu == 0)
         {
@@ -202,8 +207,9 @@ void takeUserAction(void)
             if (input() != 0)
             {
                 output(789996); // C0DEC
-                execute(0);
-                return;
+                validateNextProgram(0);
+                if (nextProgram != null)
+                    execute();
             }
         }
         if (menu == 1)
@@ -212,8 +218,9 @@ void takeUserAction(void)
             if (input() != 0)
             {
                 output(831468); // CAFEC
-                continueExecution(19875);
-                return;
+                validateNextProgram(0);
+                if (nextProgram != null)
+                    continueExecution();
             }
         }
 
@@ -223,28 +230,27 @@ void takeUserAction(void)
     }
 }
 
-int dispatchSystemCalls(int systemCall)
+void dispatchSystemCalls(int systemCall)
 {
     output(systemCall);
     if (systemCall == 1)
-        return ioFlow();
+        ioFlow();
     if (systemCall == 3)
-        saveState(0);
-    return null;
+        saveState();
 }
 
 int main(void)
 {
-    int run;
-
     // Set Variables
     null = 0 - 1;
     statusTable = 18432;
     processInMemory = readFromMemory(statusTable + 10);
-    run = dispatchSystemCalls(readFromMemory(registers));
-    if (run == null)
+    nextProgram = null;
+
+    dispatchSystemCalls(readFromMemory(registers));
+    if (nextProgram == null)
         takeUserAction();
 
-    output(49568);
+    output(3248488448 + nextProgram); // CIAO + Process
     return 0;
 }
