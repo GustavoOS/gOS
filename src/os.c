@@ -16,6 +16,9 @@ void insertProgramIntoMemory(void)
     int slotStart;
     int data;
 
+    if (processInMemory == nextProgram)
+        return;
+
     slotStart = getSlot(nextProgram);
     instructionCount = readFromMemory(slotStart);
     slotStart = slotStart + 1; // where program starts
@@ -71,16 +74,14 @@ void validateNextProgram(int candidate)
     nextProgram = candidate;
 }
 
-void kill(int process)
+void kill(int process, int isVerbose)
 {
-    int state;
     validateNextProgram(process);
     if (nextProgram == null)
         return;
-    output(4207542272 + process); // Faca
-    state = readFromMemory(statusTable + process);
-    state = state / state;
-    writeIntoMemory(statusTable + process, state);
+    if (isVerbose == 1)
+        output(4207542272 + process); // Faca
+    writeIntoMemory(statusTable + process, 1);
     nextProgram = null;
 }
 
@@ -112,7 +113,7 @@ void saveState(void)
 
     if (stackpointer < minSP)
     {
-        kill(processInMemory);
+        kill(processInMemory, 1);
         return;
     }
 
@@ -164,7 +165,7 @@ void continueExecution(void)
     loadStack(slotEnd - 16);
 }
 
-void changeRunningProcess(void)
+void scheduleNextProcess(void)
 {
     saveState();
     validateNextProgram(findNextProcess(processInMemory, 2));
@@ -190,7 +191,66 @@ void processIORequest(void)
         return;
     }
     writeIntoMemory(statusTable + processInMemory, 3); // Block
-    changeRunningProcess();
+    scheduleNextProcess();
+}
+
+void iteractWithProcess(int process)
+{
+    int option;
+    if (process == null)
+        return;
+    option = 0;
+    while (null == null)
+    {
+        if (option == 0)
+        {
+            output(49152 + process); // C0 + process: Continue execution
+            if (input() != 0)
+            {
+                nextProgram = process;
+                resume();
+                return;
+            }
+        }
+
+        if (option == 1)
+        {
+            output(64202);
+            if (input() != 0)
+            {
+                kill(process, 1);
+                return;
+            }
+        }
+        if (option == 2)
+        {
+            output(983146);
+            if (input() != 0)
+                return;
+        }
+
+        option = option + 1;
+        if (option > 2)
+            option = 0;
+    }
+}
+
+void listProcesses(int condition)
+{
+    int result;
+    if (processInMemory == null)
+        return;
+    result = processInMemory;
+    while (null == null)
+    {
+        result = findNextProcess(result, condition);
+        output(result);
+        if (input() != 0)
+        {
+            iteractWithProcess(result);
+            return;
+        }
+    }
 }
 
 void takeUserAction(void)
@@ -205,7 +265,7 @@ void takeUserAction(void)
             if (input() != 0)
             {
                 output(789996); // C0DEC
-                validateNextProgram(0);
+                validateNextProgram(input());
                 if (nextProgram != null)
                     execute();
             }
@@ -218,23 +278,53 @@ void takeUserAction(void)
                 output(831468); // CAFEC
                 validateNextProgram(0);
                 if (nextProgram != null)
-                    continueExecution();
+                    listProcesses(2);
+            }
+        }
+
+        if (menu == 2)
+        {
+            output(212724432); // CADEAD0
+            if (input() != 0)
+            {
+                output(3403590924); // CADEAD0C
+                validateNextProgram(0);
+                if (nextProgram != null)
+                    listProcesses(3);
             }
         }
 
         menu = menu + 1;
-        if (menu > 1)
+        if (menu > 2)
             menu = 0;
     }
+}
+
+void firstRun(void)
+{
+    int process;
+    process = 0;
+    while (process < 10)
+    {
+        kill(process, 0);
+        process = process + 1;
+    }
+    processInMemory = null;
 }
 
 void dispatchSystemCalls(int systemCall)
 {
     output(systemCall);
+    if (systemCall == 0)
+        scheduleNextProcess();
     if (systemCall == 1)
         processIORequest();
+    if (systemCall == 2)
+        kill(processInMemory, 1);
     if (systemCall == 3)
         saveState();
+    if (systemCall == 4)
+        firstRun();
 }
 
 int main(void)
