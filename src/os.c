@@ -35,6 +35,7 @@ void insertProgramIntoMemory(void)
 
 void execute(void)
 {
+    output(941760 + nextProgram); //E5EC
     insertProgramIntoMemory();
     //Set Registers
     writeIntoMemory(registers + 1, 0);    // SpecReg
@@ -83,7 +84,7 @@ void kill(int process)
 {
     if (process < 10)
     {
-        output(4207542272 + process); // Faca
+        output(1027232 + process); // Faca
         fastKill(process);
     }
 }
@@ -116,6 +117,7 @@ void saveState(void)
 
     if (stackpointer < minSP)
     {
+        output(57344); // E000
         kill(processInMemory);
         return;
     }
@@ -153,6 +155,7 @@ void loadStack(int fileIndex)
 void continueExecution(void)
 {
     int slotEnd;
+    output(13524672 + nextProgram); // CESEC0
     insertProgramIntoMemory();
     slotEnd = getSlot(nextProgram) + 1431;
     // Load registers
@@ -198,7 +201,7 @@ void processIORequest(void)
         nextProgram = processInMemory;
         return;
     }
-    output(60944);                                     // EE10
+    output(57360);                                     // E010
     writeIntoMemory(statusTable + processInMemory, 3); // Block
     scheduleNextProcess();
 }
@@ -226,7 +229,6 @@ void takeUserAction(void)
         {
             output(789996); // C0DEC
             validateNextProgram(input());
-            output(nextProgram);
             if (nextProgram != null)
             {
                 callExecuter();
@@ -238,7 +240,7 @@ void takeUserAction(void)
         if (input() != 0)
         {
             output(1027244); // FACAC
-            kill(input(), 1);
+            kill(input());
         }
 
         output(51966); // CAFE
