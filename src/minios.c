@@ -85,34 +85,24 @@ void runNewProcess(void)
 
 void takeUserAction(void)
 {
-    int menu;
-    menu = 0;
-    while (menu == menu)
+    while (null == null)
     {
-        if (menu == 0)
+
+        output(49374); // C0DE
+        if (input() != 0)
         {
-            output(49374); // C0DE
-            if (input() != 0)
-            {
-                output(789996); // C0DEC
-                runNewProcess();
-                return;
-            }
-        }
-        if (menu == 1)
-        {
-            output(51966); // CAFE
-            if (input() != 0)
-            {
-                output(831468); // CAFEC
-                continueProcess(19875);
-                return;
-            }
+            output(789996); // C0DEC
+            runNewProcess();
+            return;
         }
 
-        menu = menu + 1;
-        if (menu > 1)
-            menu = 0;
+        output(51966); // CAFE
+        if (input() != 0)
+        {
+            output(831468); // CAFEC
+            continueProcess(19875);
+            return;
+        }
     }
 }
 
