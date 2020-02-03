@@ -16,9 +16,6 @@ void insertProgramIntoMemory(void)
     int slotStart;
     int data;
 
-    if (processInMemory == nextProgram)
-        return;
-
     slotStart = getSlot(nextProgram);
     instructionCount = readFromMemory(slotStart);
     slotStart = slotStart + 1; // where program starts
@@ -110,11 +107,11 @@ void saveState(void)
     int stackpointer;
     int minSP;
     int slot;
+    output(1360 + processInMemory); // 55
     slot = getSlot(processInMemory);
     stackpointer = readFromMemory(registers + 3);
     minSP = readFromMemory(slot) + 1;
     minSP = (minSP / 2) + 6777;
-
     if (stackpointer < minSP)
     {
         output(57344); // E000
@@ -171,15 +168,6 @@ void continueExecution(void)
     loadStack(slotEnd - 16);
 }
 
-void scheduleNextProcess(void)
-{
-    saveState();
-    validateNextProgram(findNextProcess(processInMemory, 2));
-    if (nextProgram == null)
-        return;
-    continueExecution();
-}
-
 void callExecuter(void)
 {
     if (readFromMemory(statusTable + nextProgram) == 1)
@@ -194,30 +182,32 @@ void callExecuter(void)
 
 void processIORequest(void)
 {
-    writeIntoMemory(registers + 2,
-                    readFromMemory(registers + 2) + 1); // PC++
+    int pc;
+    pc = readFromMemory(registers + 2) + 1; // PC++
+    writeIntoMemory(getSlot(processInMemory) + 1430, pc);
+    writeIntoMemory(registers + 2, pc);
     if (processInMemory == readFromMemory(statusTable + 11))
     {
+        output(256 + processInMemory); // 10
         nextProgram = processInMemory;
         return;
     }
     output(57360);                                     // E010
     writeIntoMemory(statusTable + processInMemory, 3); // Block
-    scheduleNextProcess();
 }
 
-void listProcesses(int condition)
-{
-    int result;
-    result = 0;
-    while (null == null)
-    {
-        result = findNextProcess(result, condition);
-        output(result);
-        if (input() != 0)
-            return;
-    }
-}
+// void listProcesses(int condition)
+// {
+//     int result;
+//     result = 0;
+//     while (null == null)
+//     {
+//         result = findNextProcess(result, condition);
+//         output(result);
+//         if (input() != 0)
+//             return;
+//     }
+// }
 
 void takeUserAction(void)
 {
@@ -243,19 +233,19 @@ void takeUserAction(void)
             kill(input());
         }
 
-        output(51966); // CAFE
-        if (input() != 0)
-        {
-            output(831468); // CAFEC
-            listProcesses(2);
-        }
+        // output(51966); // CAFE
+        // if (input() != 0)
+        // {
+        //     output(831468); // CAFEC
+        //     listProcesses(2);
+        // }
 
-        output(212724432); // CADEAD0
-        if (input() != 0)
-        {
-            output(3403590924); // CADEAD0C
-            listProcesses(3);
-        }
+        // output(212724432); // CADEAD0
+        // if (input() != 0)
+        // {
+        //     output(3403590924); // CADEAD0C
+        //     listProcesses(3);
+        // }
     }
 }
 
@@ -278,16 +268,19 @@ void firstRun(void)
 void dispatchSystemCalls(int systemCall)
 {
     output(systemCall);
-    if (systemCall == 0)
-        scheduleNextProcess();
+    if (systemCall == 4)
+    {
+        firstRun();
+        return;
+    }
+    if (systemCall == 2)
+    {
+        kill(processInMemory);
+        return;
+    }
+    saveState();
     if (systemCall == 1)
         processIORequest();
-    if (systemCall == 2)
-        kill(processInMemory);
-    if (systemCall == 3)
-        saveState();
-    if (systemCall == 4)
-        firstRun();
 }
 
 int main(void)
