@@ -73,16 +73,19 @@ void validateNextProgram(int candidate)
         return;
     nextProgram = candidate;
 }
-
-void kill(int process, int isVerbose)
+void fastKill(int process)
 {
-    validateNextProgram(process);
-    if (nextProgram == null)
-        return;
-    if (isVerbose == 1)
+    if (readFromMemory(statusTable + process) > 1)
+        writeIntoMemory(statusTable + process, 1);
+}
+
+void kill(int process)
+{
+    if (process < 10)
+    {
         output(4207542272 + process); // Faca
-    writeIntoMemory(statusTable + process, 1);
-    nextProgram = null;
+        fastKill(process);
+    }
 }
 
 void saveStack(int fileIndex)
@@ -113,7 +116,7 @@ void saveState(void)
 
     if (stackpointer < minSP)
     {
-        kill(processInMemory, 1);
+        kill(processInMemory);
         return;
     }
 
@@ -256,13 +259,17 @@ void takeUserAction(void)
 
 void firstRun(void)
 {
-    int process;
-    process = 0;
-    while (process < 10)
-    {
-        kill(process, 0);
-        process = process + 1;
-    }
+    fastKill(0);
+    fastKill(1);
+    fastKill(2);
+    fastKill(3);
+    fastKill(4);
+    fastKill(5);
+    fastKill(6);
+    fastKill(7);
+    fastKill(8);
+    fastKill(9);
+
     processInMemory = null;
 }
 
@@ -274,7 +281,7 @@ void dispatchSystemCalls(int systemCall)
     if (systemCall == 1)
         processIORequest();
     if (systemCall == 2)
-        kill(processInMemory, 1);
+        kill(processInMemory);
     if (systemCall == 3)
         saveState();
     if (systemCall == 4)
