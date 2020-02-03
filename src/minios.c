@@ -57,8 +57,10 @@ void insertProgramIntoMemory(void)
     }
 }
 
-void continueProcess(int slotEnd)
+void continueProcess(void)
 {
+    int slotEnd;
+    slotEnd = 19875;
     insertProgramIntoMemory();
     // Load registers
     writeIntoMemory(registers + 8, readFromMemory(slotEnd - 7)); // Acumulator
@@ -100,7 +102,7 @@ void takeUserAction(void)
         if (input() != 0)
         {
             output(831468); // CAFEC
-            continueProcess(19875);
+            continueProcess();
             return;
         }
     }
