@@ -1,66 +1,47 @@
 int registers;
 int null;
 int processInMemory;
-
-int readFromRegister(int reg)
-{
-    return readFromMemory(registers + reg);
-}
-
-void writeIntoRegister(int reg, int value)
-{
-    writeIntoMemory(registers + reg, value);
-}
+int statusTable;
+int nextProgram;
 
 int getSlot(int file)
 {
-    return 18444 + (file * 1432);
+    return (file * 1432) + statusTable + 12;
 }
 
-void insertProcessIntoMemory(int file)
+void insertProgramIntoMemory(void)
 {
     int instructionCount;
     int copied;
-    int fullWords;
     int slotStart;
     int data;
 
-    slotStart = getSlot(file);
+    slotStart = getSlot(nextProgram);
     instructionCount = readFromMemory(slotStart);
-    slotStart = slotStart + 1; // where program start
+    slotStart = slotStart + 1; // where program starts
+    copied = 0;
     while (copied < instructionCount)
     {
-        data = readFromMemory(slotStart + fullWords);
+        data = readFromMemory(slotStart + (copied / 2));
         writeIntoMemory(copied, extractFirstHW(data));
         writeIntoMemory(copied + 1, extractSecondHW(data));
-        fullWords = fullWords + 1;
         copied = copied + 2;
     }
-    writeIntoMemory(18442, file); // In memory
+    writeIntoMemory(statusTable + 10, nextProgram); // In memory
 }
 
-int execute(int file)
+void execute(void)
 {
-    int listPosition;
-
-    if (file > 9)
-        return null;
-
-    listPosition = 18432 + file;
-    if (readFromMemory(listPosition) == 0)
-        return null;
-
-    insertProcessIntoMemory(file);
-
-    // Update Process List
-    writeIntoMemory(listPosition, 2); // Mark slot as executing
-    writeIntoMemory(18443, file);     // The leading process
-
+    output(941760 + nextProgram); //E5EC
+    insertProgramIntoMemory();
     //Set Registers
-    writeIntoRegister(1, 0);    // SpecReg
-    writeIntoRegister(2, 0);    // PC
-    writeIntoRegister(3, 8191); // SP
-    return file;
+    writeIntoMemory(registers + 1, 0);    // SpecReg
+    writeIntoMemory(registers + 2, 0);    // PC
+    writeIntoMemory(registers + 3, 8191); // SP
+    writeIntoMemory(registers + 8, 0);    // Acumulator
+
+    writeIntoMemory(statusTable + 11, nextProgram); // Leading process
+    writeIntoMemory(statusTable + nextProgram, 2);  // Running
 }
 
 int findNextProcess(int current, int condition)
@@ -71,199 +52,249 @@ int findNextProcess(int current, int condition)
         next = 0;
     while (next != current)
     {
-        if (readFromMemory(18432 + next) == condition)
+        if (readFromMemory(statusTable + next) == condition)
             return next;
         next = next + 1;
         if (next > 9)
             next = 0;
     }
-    if (readFromMemory(18432 + current) == condition)
+    if (readFromMemory(statusTable + current) == condition)
         return current;
     return null;
 }
 
-int saveState(int program)
+void validateNextProgram(int candidate)
 {
-    int codeSize;
-    int stackpointer;
-    int slot;
-    int regStart;
-    int maxSP;
-    stackpointer = readFromRegister(3);
-    slot = getSlot(program);
-    codeSize = readFromMemory(slot);
-    codeSize = (codeSize + 1) / 2;
-    if (stackpointer - codeSize < 6769)
-        return null; // Stack doesn't fit
-
-    regStart = getSlot(program + 1) - 1;
-
-    // Save Registers
-    writeIntoMemory(regStart, readFromRegister(1));     // SpecReg
-    writeIntoMemory(regStart - 1, readFromRegister(2)); // PC
-    writeIntoMemory(regStart - 2, stackpointer);        // SP
-    writeIntoMemory(regStart - 3, readFromRegister(4)); // Return Address
-    writeIntoMemory(regStart - 4, readFromRegister(5)); // Global Pointer
-    writeIntoMemory(regStart - 5, readFromRegister(6)); // Frame Pointer
-    writeIntoMemory(regStart - 6, readFromRegister(7)); // Temporary Register
-    writeIntoMemory(regStart - 7, readFromRegister(8)); // Acumulator
-
-    // Save Stack
-    slot = slot + codeSize + 1;
-    maxSP = 8192;
-    while (stackpointer < maxSP)
-    {
-        writeIntoMemory(slot, readFromMemory(stackpointer));
-        stackpointer = stackpointer + 1;
-        slot = slot + 1;
-    }
-    return 0;
+    if (candidate > 9)
+        return;
+    if (readFromMemory(statusTable + candidate) == 0)
+        return;
+    nextProgram = candidate;
 }
-
-void recoverState(int file)
+void fastKill(int process)
 {
-    int regStart;
-    int stackpointer;
-    int maxSP;
-    int codeSize;
-    regStart = getSlot(file + 1) - 1;
-    stackpointer = readFromMemory(regStart - 2);
-    maxSP = 8192;
-    //Save registers
-    writeIntoRegister(1, readFromMemory(regStart));     // SpecReg
-    writeIntoRegister(2, readFromMemory(regStart - 1)); // PC
-    writeIntoRegister(3, stackpointer);                 // SP
-    writeIntoRegister(4, readFromMemory(regStart - 3)); // Return Address
-    writeIntoRegister(5, readFromMemory(regStart - 4)); // Global Pointer
-    writeIntoRegister(6, readFromMemory(regStart - 5)); // Frame Pointer
-    writeIntoRegister(7, readFromMemory(regStart - 6)); // Temporary Register
-    writeIntoRegister(8, readFromMemory(regStart - 7)); // Acumulator
-
-    regStart = getSlot(file);
-    codeSize = extractSecondHW(readFromMemory(regStart));
-    codeSize = (codeSize + 1) / 2;
-    regStart = regStart + codeSize + 1;
-    while (stackpointer < maxSP)
-    {
-        writeIntoMemory(stackpointer, readFromMemory(regStart));
-        stackpointer = stackpointer + 1;
-        regStart = regStart + 1;
-    }
+    if (readFromMemory(statusTable + process) > 1)
+        writeIntoMemory(statusTable + process, 1);
 }
 
 void kill(int process)
 {
-    int state;
-    if (process < 9)
+    if (process < 10)
     {
-        output(4207542272 + process); // Faca
-        state = readFromMemory(18432 + process);
-        state = state / state; // Division by 0 is defined as 0 in the ALU
-        writeIntoMemory(18432 + process, state);
+        output(1027232 + process); // Faca
+        fastKill(process);
     }
 }
 
-void continueExecution(int nextProgram)
+void saveStack(int fileIndex)
 {
-    if (nextProgram != processInMemory)
+    int stackIndex;
+    int sp;
+
+    stackIndex = 8192;
+    sp = readFromMemory(registers + 3);
+
+    while (sp < stackIndex)
     {
-        if (saveState(processInMemory) == null)
-            kill(processInMemory);
-        insertProcessIntoMemory(nextProgram);
-        recoverState(nextProgram);
+        writeIntoMemory(fileIndex, readFromMemory(stackIndex - 1));
+        stackIndex = stackIndex - 1;
+        fileIndex = fileIndex - 1;
     }
 }
 
-int changeRunningProcess(void)
+void saveState(void)
 {
-    int nextAvailableProgram;
-    nextAvailableProgram = findNextProcess(processInMemory, 2);
-    if (nextAvailableProgram == null)
-        return null;
-    continueExecution(nextAvailableProgram);
-    return nextAvailableProgram;
+    int stackpointer;
+    int minSP;
+    int slot;
+    output(1360 + processInMemory); // 55
+    slot = getSlot(processInMemory);
+    stackpointer = readFromMemory(registers + 3);
+    minSP = readFromMemory(slot) + 1;
+    minSP = (minSP / 2) + 6777;
+    if (stackpointer < minSP)
+    {
+        output(57344); // E000
+        kill(processInMemory);
+        return;
+    }
+
+    slot = slot + 1431;
+
+    writeIntoMemory(slot - 7, readFromMemory(registers + 8)); // Acumulator
+    writeIntoMemory(slot - 6, readFromMemory(registers + 7)); // Temporary Register
+    writeIntoMemory(slot - 5, readFromMemory(registers + 6)); // Frame Pointer
+    writeIntoMemory(slot - 4, readFromMemory(registers + 5)); // Global Pointer
+    writeIntoMemory(slot - 3, readFromMemory(registers + 4)); // Return Address
+    writeIntoMemory(slot - 2, stackpointer);                  // SP
+    writeIntoMemory(slot - 1, readFromMemory(registers + 2)); // PC
+    writeIntoMemory(slot, readFromMemory(registers + 1));     // SpecReg
+
+    saveStack(slot - 16);
 }
 
-int listProcess(int currentProgram, int condition)
+void loadStack(int fileIndex)
 {
-    int next;
-    next = findNextProcess(currentProgram, condition);
-    output(next);
-    if (next == null)
-        return currentProgram;
-    return next;
+    int stackIndex;
+    int sp;
+
+    stackIndex = 8192;
+    sp = readFromMemory(registers + 3);
+
+    while (sp < stackIndex)
+    {
+        writeIntoMemory(stackIndex - 1, readFromMemory(fileIndex));
+        stackIndex = stackIndex - 1;
+        fileIndex = fileIndex - 1;
+    }
 }
 
-int resume(int process)
+void continueExecution(void)
 {
-    if (process > 9)
-        return null;
-    if (readFromMemory(18432 + process) < 2)
-        return null;
-    writeIntoMemory(18432 + process, 2);
-    continueExecution(process);
-    writeIntoMemory(18443, process); // The leading process
-    return process;
+    int slotEnd;
+    output(13524672 + nextProgram); // CESEC0
+    insertProgramIntoMemory();
+    slotEnd = getSlot(nextProgram) + 1431;
+    // Load registers
+    writeIntoMemory(registers + 8, readFromMemory(slotEnd - 7)); // Acumulator
+    writeIntoMemory(registers + 7, readFromMemory(slotEnd - 6)); // Temporary Register
+    writeIntoMemory(registers + 6, readFromMemory(slotEnd - 5)); // Frame Pointer
+    writeIntoMemory(registers + 5, readFromMemory(slotEnd - 4)); // Global Pointer
+    writeIntoMemory(registers + 4, readFromMemory(slotEnd - 3)); // Return Address
+    writeIntoMemory(registers + 3, readFromMemory(slotEnd - 2)); // SP
+    writeIntoMemory(registers + 2, readFromMemory(slotEnd - 1)); // PC
+    writeIntoMemory(registers + 1, readFromMemory(slotEnd));     // SpecReg
+
+    loadStack(slotEnd - 16);
 }
 
-int ioFlow(void)
+void callExecuter(void)
 {
-    writeIntoRegister(2, readFromRegister(2) + 1); // PC++ to avoid loop
-    if (processInMemory == readFromMemory(18443))
-        return processInMemory;
-    writeIntoMemory(18432 + processInMemory, 3);
-    return changeRunningProcess();
+    if (readFromMemory(statusTable + nextProgram) == 1)
+    {
+        execute();
+        return;
+    }
+    writeIntoMemory(statusTable + nextProgram, 2);
+    continueExecution();
+    writeIntoMemory(statusTable + 11, nextProgram); // The leading process
+}
+
+void processIORequest(void)
+{
+    int pc;
+    pc = readFromMemory(registers + 2) + 1; // PC++
+    writeIntoMemory(getSlot(processInMemory) + 1430, pc);
+    writeIntoMemory(registers + 2, pc);
+    if (processInMemory == readFromMemory(statusTable + 11))
+    {
+        output(256 + processInMemory); // 10
+        nextProgram = processInMemory;
+        return;
+    }
+    output(57360);                                     // E010
+    writeIntoMemory(statusTable + processInMemory, 3); // Block
+}
+
+// void listProcesses(int condition)
+// {
+//     int result;
+//     result = 0;
+//     while (null == null)
+//     {
+//         result = findNextProcess(result, condition);
+//         output(result);
+//         if (input() != 0)
+//             return;
+//     }
+// }
+
+void takeUserAction(void)
+{
+    while (nextProgram == null)
+    {
+
+        output(49374); // C0DE
+        if (input() != 0)
+        {
+            output(789996); // C0DEC
+            validateNextProgram(input());
+            if (nextProgram != null)
+            {
+                callExecuter();
+                return;
+            }
+        }
+
+        output(64202); // FACA
+        if (input() != 0)
+        {
+            output(1027244); // FACAC
+            kill(input());
+        }
+
+        // output(51966); // CAFE
+        // if (input() != 0)
+        // {
+        //     output(831468); // CAFEC
+        //     listProcesses(2);
+        // }
+
+        // output(212724432); // CADEAD0
+        // if (input() != 0)
+        // {
+        //     output(3403590924); // CADEAD0C
+        //     listProcesses(3);
+        // }
+    }
+}
+
+void firstRun(void)
+{
+    fastKill(0);
+    fastKill(1);
+    fastKill(2);
+    fastKill(3);
+    fastKill(4);
+    fastKill(5);
+    fastKill(6);
+    fastKill(7);
+    fastKill(8);
+    fastKill(9);
+
+    processInMemory = null;
+}
+
+void dispatchSystemCalls(int systemCall)
+{
+    output(systemCall);
+    if (systemCall == 4)
+    {
+        firstRun();
+        return;
+    }
+    if (systemCall == 2)
+    {
+        kill(processInMemory);
+        return;
+    }
+    saveState();
+    if (systemCall == 1)
+        processIORequest();
 }
 
 int main(void)
 {
-    int run;
-    int userInput;
-    int systemCall;
-    int showing;
+    // Set Variables
     null = 0 - 1;
-    run = null;
-    systemCall = readFromRegister(0);
-    processInMemory = readFromMemory(18442);
-    showing = processInMemory;
-    if (systemCall == 0)
-        run = changeRunningProcess();
-    if (systemCall == 1)
-        run = ioFlow();
-    if (systemCall == 2) // End Process
-        kill(processInMemory);
+    statusTable = 18432;
+    processInMemory = readFromMemory(statusTable + 10);
+    nextProgram = null;
 
-    while (run == null)
-    {
-        output(0);
-        userInput = input();
+    dispatchSystemCalls(readFromMemory(registers));
+    if (nextProgram == null)
+        takeUserAction();
 
-        if (userInput == 0)
-        {
-            output(49374); // Code
-            run = execute(input());
-        }
-        if (userInput == 1)
-        {
-            output(2826); // B0A
-            showing = listProcess(showing, 2);
-        }
-        if (userInput == 2)
-        {
-            output(212724432); // CADEADO
-            showing = listProcess(showing, 3);
-        }
-        if (userInput == 3)
-        {
-            output(51966); // Cafe
-            run = resume(showing);
-        }
-        if (userInput == 4)
-        {
-            kill(showing);
-        }
-    }
-
-    output(3248488448 + run); // CIAO + Process
+    output(3248488448 + nextProgram); // CIAO + Process
     return 0;
 }
