@@ -174,8 +174,13 @@ void scheduleNextProcess(void)
     continueExecution();
 }
 
-void resume(void)
+void callExecuter(void)
 {
+    if (readFromMemory(statusTable + nextProgram) == 1)
+    {
+        execute();
+        return;
+    }
     writeIntoMemory(statusTable + nextProgram, 2);
     continueExecution();
     writeIntoMemory(statusTable + 11, nextProgram); // The leading process
@@ -190,113 +195,62 @@ void processIORequest(void)
         nextProgram = processInMemory;
         return;
     }
+    output(60944);                                     // EE10
     writeIntoMemory(statusTable + processInMemory, 3); // Block
     scheduleNextProcess();
-}
-
-void iteractWithProcess(int process)
-{
-    int option;
-    if (process == null)
-        return;
-    option = 0;
-    while (null == null)
-    {
-        if (option == 0)
-        {
-            output(49152 + process); // C0 + process: Continue execution
-            if (input() != 0)
-            {
-                nextProgram = process;
-                resume();
-                return;
-            }
-        }
-
-        if (option == 1)
-        {
-            output(64202);
-            if (input() != 0)
-            {
-                kill(process, 1);
-                return;
-            }
-        }
-        if (option == 2)
-        {
-            output(983146);
-            if (input() != 0)
-                return;
-        }
-
-        option = option + 1;
-        if (option > 2)
-            option = 0;
-    }
 }
 
 void listProcesses(int condition)
 {
     int result;
-    if (processInMemory == null)
-        return;
-    result = processInMemory;
+    result = 0;
     while (null == null)
     {
         result = findNextProcess(result, condition);
         output(result);
         if (input() != 0)
-        {
-            iteractWithProcess(result);
             return;
-        }
     }
 }
 
 void takeUserAction(void)
 {
-    int menu;
-    menu = 0;
     while (nextProgram == null)
     {
-        if (menu == 0)
+
+        output(49374); // C0DE
+        if (input() != 0)
         {
-            output(49374); // C0DE
-            if (input() != 0)
+            output(789996); // C0DEC
+            validateNextProgram(input());
+            output(nextProgram);
+            if (nextProgram != null)
             {
-                output(789996); // C0DEC
-                validateNextProgram(input());
-                if (nextProgram != null)
-                    execute();
-            }
-        }
-        if (menu == 1)
-        {
-            output(51966); // CAFE
-            if (input() != 0)
-            {
-                output(831468); // CAFEC
-                validateNextProgram(0);
-                if (nextProgram != null)
-                    listProcesses(2);
+                callExecuter();
+                return;
             }
         }
 
-        if (menu == 2)
+        output(64202); // FACA
+        if (input() != 0)
         {
-            output(212724432); // CADEAD0
-            if (input() != 0)
-            {
-                output(3403590924); // CADEAD0C
-                validateNextProgram(0);
-                if (nextProgram != null)
-                    listProcesses(3);
-            }
+            output(1027244); // FACAC
+            kill(input(), 1);
         }
 
-        menu = menu + 1;
-        if (menu > 2)
-            menu = 0;
+        output(51966); // CAFE
+        if (input() != 0)
+        {
+            output(831468); // CAFEC
+            listProcesses(2);
+        }
+
+        output(212724432); // CADEAD0
+        if (input() != 0)
+        {
+            output(3403590924); // CADEAD0C
+            listProcesses(3);
+        }
     }
 }
 
