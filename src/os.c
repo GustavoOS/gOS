@@ -123,9 +123,9 @@ void saveState(void)
 
     writeIntoMemory(slot - 7, readFromMemory(registers + 8)); // Acumulator
     writeIntoMemory(slot - 6, readFromMemory(registers + 7)); // Temporary Register
-    writeIntoMemory(slot - 5, readFromMemory(registers + 6)); // Frame Pointer
-    writeIntoMemory(slot - 4, readFromMemory(registers + 5)); // Global Pointer
-    writeIntoMemory(slot - 3, readFromMemory(registers + 4)); // Return Address
+    writeIntoMemory(slot - 5, readFromMemory(registers + 6)); // Second Register
+    writeIntoMemory(slot - 4, readFromMemory(registers + 5)); // Frame Pointer
+    writeIntoMemory(slot - 3, readFromMemory(registers + 4)); // Global Pointer
     writeIntoMemory(slot - 2, stackpointer);                  // SP
     writeIntoMemory(slot - 1, readFromMemory(registers + 2)); // PC
     writeIntoMemory(slot, readFromMemory(registers + 1));     // SpecReg
@@ -158,9 +158,9 @@ void continueExecution(void)
     // Load registers
     writeIntoMemory(registers + 8, readFromMemory(slotEnd - 7)); // Acumulator
     writeIntoMemory(registers + 7, readFromMemory(slotEnd - 6)); // Temporary Register
-    writeIntoMemory(registers + 6, readFromMemory(slotEnd - 5)); // Frame Pointer
-    writeIntoMemory(registers + 5, readFromMemory(slotEnd - 4)); // Global Pointer
-    writeIntoMemory(registers + 4, readFromMemory(slotEnd - 3)); // Return Address
+    writeIntoMemory(registers + 6, readFromMemory(slotEnd - 5)); // Second Register
+    writeIntoMemory(registers + 5, readFromMemory(slotEnd - 4)); // Frame Pointer
+    writeIntoMemory(registers + 4, readFromMemory(slotEnd - 3)); // Global Pointer
     writeIntoMemory(registers + 3, readFromMemory(slotEnd - 2)); // SP
     writeIntoMemory(registers + 2, readFromMemory(slotEnd - 1)); // PC
     writeIntoMemory(registers + 1, readFromMemory(slotEnd));     // SpecReg
