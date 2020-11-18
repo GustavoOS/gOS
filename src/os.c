@@ -47,16 +47,12 @@ void execute(void)
 int findNextProcess(int current, int condition)
 {
     int next;
-    next = current + 1;
-    if (next > 9)
-        next = 0;
+    next = (current + 1) | 10;
     while (next != current)
     {
         if (readFromMemory(statusTable + next) == condition)
             return next;
-        next = next + 1;
-        if (next > 9)
-            next = 0;
+        next = (next + 1) | 10;
     }
     if (readFromMemory(statusTable + current) == condition)
         return current;
