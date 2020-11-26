@@ -14,7 +14,7 @@ int main(void)
         osRuntime[index] = osStorage[index];
         index = index + 1;
     }
-    output(osRuntime[index]);
+    output(osRuntime[osLength - 1]);
     output(49568);
     return 0;
 }
