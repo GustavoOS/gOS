@@ -48,3 +48,12 @@ SS + number | Save State of process (number)
 
 
 > \* : Temporary Messages
+
+
+## File States
+State | Meaning
+------ | -------
+0 | Empty
+1 | Exists
+2 | Executing
+3 | Blocked

@@ -1,12 +1,18 @@
-int registers;
 int null;
-int processInMemory;
-int statusTable;
 int nextProgram;
 
-int getSlot(int file)
+int context[0];
+int statusTable[0];
+int file[0];
+
+int getSlot(int fileIndex)
 {
-    return (file * 1432) + statusTable + 12;
+    return (fileIndex * 1432) + 18444;
+}
+
+int file_stackOrigin(void)
+{
+    return ((file[0] + 1) / 2) + 1;
 }
 
 void insertProgramIntoMemory(void)
@@ -15,66 +21,66 @@ void insertProgramIntoMemory(void)
     int copied;
     int slotStart;
     int data;
+    int program[0];
 
     slotStart = getSlot(nextProgram);
-    instructionCount = readFromMemory(slotStart);
-    slotStart = slotStart + 1; // where program starts
+    assignPointer(file, slotStart);
+    assignPointer(program, 0);
+    instructionCount = file[0];
+    assignPointer(file, slotStart + 1);
     copied = 0;
     while (copied < instructionCount)
     {
-        data = readFromMemory(slotStart + (copied / 2));
-        writeIntoMemory(copied, extractFirstHW(data));
-        writeIntoMemory(copied + 1, extractSecondHW(data));
+        data = file[copied / 2];
+        program[copied] = extractFirstHW(data);
+        program[copied + 1] = extractSecondHW(data);
         copied = copied + 2;
     }
-    writeIntoMemory(statusTable + 10, nextProgram); // In memory
+    statusTable[10] = nextProgram; // In memory
 }
 
 void execute(void)
 {
     output(941760 + nextProgram); //E5EC
     insertProgramIntoMemory();
-    //Set Registers
-    writeIntoMemory(registers + 1, 0);    // SpecReg
-    writeIntoMemory(registers + 2, 0);    // PC
-    writeIntoMemory(registers + 3, 8191); // SP
-    writeIntoMemory(registers + 8, 0);    // Acumulator
+    //Set context
+    context[1] = 0;    // SpecReg
+    context[2] = 0;    // PC
+    context[3] = 8191; // SP
+    context[8] = 0;    // Acumulator
 
-    writeIntoMemory(statusTable + 11, nextProgram); // Leading process
-    writeIntoMemory(statusTable + nextProgram, 2);  // Running
+    statusTable[11] = nextProgram; // Leading process
+    statusTable[nextProgram] = 2;  // Running
 }
 
-int findNextProcess(int current, int condition)
-{
-    int next;
-    next = current + 1;
-    if (next > 9)
-        next = 0;
-    while (next != current)
-    {
-        if (readFromMemory(statusTable + next) == condition)
-            return next;
-        next = next + 1;
-        if (next > 9)
-            next = 0;
-    }
-    if (readFromMemory(statusTable + current) == condition)
-        return current;
-    return null;
-}
+// int findNextProcess(int current, int condition)
+// {
+//     int next;
+//     next = (current + 1) | 10;
+//     while (next != current)
+//     {
+//         if (statusTable[next] == condition)
+//             return next;
+//         next = (next + 1) | 10;
+//     }
+//     if (statusTable[current] == condition)
+//         return current;
+//     return null;
+// }
 
 void validateNextProgram(int candidate)
 {
     if (candidate > 9)
         return;
-    if (readFromMemory(statusTable + candidate) == 0)
+    if (statusTable[candidate] == 0)
         return;
     nextProgram = candidate;
 }
+
 void fastKill(int process)
 {
-    if (readFromMemory(statusTable + process) > 1)
-        writeIntoMemory(statusTable + process, 1);
+    if (statusTable[process] > 1)
+        statusTable[process] = 1;
 }
 
 void kill(int process)
@@ -86,114 +92,113 @@ void kill(int process)
     }
 }
 
-void saveStack(int fileIndex)
+void saveStack(void)
 {
-    int stackIndex;
-    int sp;
+    int remainingItems;
+    int stack[0];
 
-    stackIndex = 8192;
-    sp = readFromMemory(registers + 3);
+    remainingItems = 8192 - context[3];
+    assignPointer(stack, context[3]);
+    assignPointer(file, file_stackOrigin() + getSlot(statusTable[10]));
 
-    while (sp < stackIndex)
+    while (remainingItems > 0)
     {
-        writeIntoMemory(fileIndex, readFromMemory(stackIndex - 1));
-        stackIndex = stackIndex - 1;
-        fileIndex = fileIndex - 1;
+        file[remainingItems] = stack[remainingItems];
+        remainingItems = remainingItems - 1;
     }
 }
 
 void saveState(void)
 {
     int stackpointer;
-    int minSP;
     int slot;
-    output(1360 + processInMemory); // 55
-    slot = getSlot(processInMemory);
-    stackpointer = readFromMemory(registers + 3);
-    minSP = readFromMemory(slot) + 1;
-    minSP = (minSP / 2) + 6777;
+    int minSP;
+    slot = getSlot(statusTable[10]);
+    output(1360 + statusTable[10]); // 55
+    assignPointer(file, getSlot(statusTable[10]));
+    stackpointer = context[3];
+    minSP = file_stackOrigin() + 6777;
     if (stackpointer < minSP)
     {
         output(57344); // E000
-        kill(processInMemory);
+        kill(statusTable[10]);
         return;
     }
+    assignPointer(file, slot + 1423); // file += 1423
+    file[0] = context[8];             // Acumulator
+    file[1] = context[7];             // Temporary Register
+    file[2] = context[6];             // Second Register
+    file[3] = context[5];             // Frame Pointer
+    file[4] = context[4];             // Global Pointer
+    file[5] = context[3];             // SP
+    file[6] = context[2];             // PC
+    file[7] = context[1];             // SpecReg
+    file[8] = context[0];             // SysCall
 
-    slot = slot + 1431;
-
-    writeIntoMemory(slot - 7, readFromMemory(registers + 8)); // Acumulator
-    writeIntoMemory(slot - 6, readFromMemory(registers + 7)); // Temporary Register
-    writeIntoMemory(slot - 5, readFromMemory(registers + 6)); // Second Register
-    writeIntoMemory(slot - 4, readFromMemory(registers + 5)); // Frame Pointer
-    writeIntoMemory(slot - 3, readFromMemory(registers + 4)); // Global Pointer
-    writeIntoMemory(slot - 2, stackpointer);                  // SP
-    writeIntoMemory(slot - 1, readFromMemory(registers + 2)); // PC
-    writeIntoMemory(slot, readFromMemory(registers + 1));     // SpecReg
-
-    saveStack(slot - 16);
+    saveStack();
 }
 
-void loadStack(int fileIndex)
+void loadStack(void)
 {
-    int stackIndex;
-    int sp;
+    int remainingItems;
+    int stack[0];
 
-    stackIndex = 8192;
-    sp = readFromMemory(registers + 3);
+    remainingItems = 8192 - context[3];
+    assignPointer(stack, context[3]);
+    assignPointer(file, file_stackOrigin() + getSlot(nextProgram));
 
-    while (sp < stackIndex)
+    while (remainingItems > 0)
     {
-        writeIntoMemory(stackIndex - 1, readFromMemory(fileIndex));
-        stackIndex = stackIndex - 1;
-        fileIndex = fileIndex - 1;
+        stack[remainingItems] = file[remainingItems];
+        remainingItems = remainingItems - 1;
     }
 }
 
 void continueExecution(void)
 {
-    int slotEnd;
+    int slot;
+    slot = getSlot(nextProgram);
     output(13524672 + nextProgram); // CESEC0
     insertProgramIntoMemory();
-    slotEnd = getSlot(nextProgram) + 1431;
-    // Load registers
-    writeIntoMemory(registers + 8, readFromMemory(slotEnd - 7)); // Acumulator
-    writeIntoMemory(registers + 7, readFromMemory(slotEnd - 6)); // Temporary Register
-    writeIntoMemory(registers + 6, readFromMemory(slotEnd - 5)); // Second Register
-    writeIntoMemory(registers + 5, readFromMemory(slotEnd - 4)); // Frame Pointer
-    writeIntoMemory(registers + 4, readFromMemory(slotEnd - 3)); // Global Pointer
-    writeIntoMemory(registers + 3, readFromMemory(slotEnd - 2)); // SP
-    writeIntoMemory(registers + 2, readFromMemory(slotEnd - 1)); // PC
-    writeIntoMemory(registers + 1, readFromMemory(slotEnd));     // SpecReg
+    assignPointer(file, slot + 1423);
+    // Load context
+    context[8] = file[0]; // Acumulator
+    context[7] = file[1]; // Temporary Register
+    context[6] = file[2]; // Second Register
+    context[5] = file[3]; // Frame Pointer
+    context[4] = file[4]; // Global Pointer
+    context[3] = file[5]; // SP
+    context[2] = file[6]; // PC
+    context[1] = file[7]; // SpecReg
 
-    loadStack(slotEnd - 16);
+    assignPointer(file, slot);
+    loadStack();
 }
 
 void callExecuter(void)
 {
-    if (readFromMemory(statusTable + nextProgram) == 1)
+    if (statusTable[nextProgram] == 1)
     {
         execute();
         return;
     }
-    writeIntoMemory(statusTable + nextProgram, 2);
+    statusTable[nextProgram] = 2;
     continueExecution();
-    writeIntoMemory(statusTable + 11, nextProgram); // The leading process
+    statusTable[11] = nextProgram; // The leading process
 }
 
 void processIORequest(void)
 {
-    int pc;
-    pc = readFromMemory(registers + 2) + 1; // PC++
-    writeIntoMemory(getSlot(processInMemory) + 1430, pc);
-    writeIntoMemory(registers + 2, pc);
-    if (processInMemory == readFromMemory(statusTable + 11))
+    context[2] = context[2] + 1; // PC++
+    if (statusTable[10] == statusTable[11])
     {
-        output(256 + processInMemory); // 10
-        nextProgram = processInMemory;
+        output(256 + statusTable[10]); // 10
+        nextProgram = statusTable[10];
         return;
     }
-    output(57360);                                     // E010
-    writeIntoMemory(statusTable + processInMemory, 3); // Block
+    output(57360); // E010
+    statusTable[statusTable[10]] = 3;
+    saveState();
 }
 
 // void listProcesses(int condition)
@@ -262,7 +267,7 @@ void firstRun(void)
     fastKill(8);
     fastKill(9);
 
-    processInMemory = null;
+    statusTable[10] = null;
 }
 
 void dispatchSystemCalls(int systemCall)
@@ -275,23 +280,26 @@ void dispatchSystemCalls(int systemCall)
     }
     if (systemCall == 2)
     {
-        kill(processInMemory);
+        kill(statusTable[10]);
+        return;
+    }
+    if (systemCall == 1)
+    {
+        processIORequest();
         return;
     }
     saveState();
-    if (systemCall == 1)
-        processIORequest();
 }
 
 int main(void)
 {
     // Set Variables
     null = 0 - 1;
-    statusTable = 18432;
-    processInMemory = readFromMemory(statusTable + 10);
+    assignPointer(statusTable, 18432);
+    assignPointer(context, 6135);
     nextProgram = null;
 
-    dispatchSystemCalls(readFromMemory(registers));
+    dispatchSystemCalls(context[0]);
     if (nextProgram == null)
         takeUserAction();
 

@@ -2,21 +2,19 @@ int main(void)
 {
     int osLength;
     int index;
-    int osStart;
-    int hdStart;
+    int osStorage[0];
+    int osRuntime[0];
 
-    osStart = 2048;
-    hdStart = 16384;
-    osLength = readFromMemory(hdStart);
-    hdStart = hdStart + 1;
+    assignPointer(osRuntime, 2048);
+    assignPointer(osStorage, 16385);
+    osLength = readFromMemory(16384);
     index = 0;
     while (index < osLength)
     {
-        writeIntoMemory(osStart + index,
-                        readFromMemory(hdStart + index));
+        osRuntime[index] = osStorage[index];
         index = index + 1;
     }
-    output(readFromMemory(osLength + osStart - 1));
+    output(osRuntime[osLength - 1]);
     output(49568);
     return 0;
 }
