@@ -4,7 +4,7 @@ int main(void)
 {
     int i;
     i = 0;
-    assignPointer(context, 6134);
+    assignPointer(context, 6133);
     while (i < 10)
     {
         output(context[i]);
