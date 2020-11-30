@@ -11,5 +11,6 @@ int main(void)
         i = i + 1;
     }
     context[2] = 3;
+    output(49568); //C1A0
     return 0;
 }
