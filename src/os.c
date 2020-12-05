@@ -142,15 +142,15 @@ void continueExecution(void)
     insertProgramIntoMemory();
     assignPointer(file, slotPosition[nextProgram] + 2561);
     // Load context
-    context[9] = file[9]; // Heap Array
-    context[8] = file[8]; // Acumulator
-    context[7] = file[7]; // Temporary Register
-    context[6] = file[6]; // Second Register
-    context[5] = file[5]; // Frame Pointer
-    context[4] = file[4]; // Global Pointer
-    context[3] = file[3]; // SP
-    context[2] = file[2]; // PC
     context[1] = file[1]; // SpecReg
+    context[2] = file[2]; // PC
+    context[3] = file[3]; // SP
+    context[4] = file[4]; // Global Pointer
+    context[5] = file[5]; // Frame Pointer
+    context[6] = file[6]; // Second Register
+    context[7] = file[7]; // Temporary Register
+    context[8] = file[8]; // Acumulator
+    context[9] = file[9]; // Heap Array
 
     loadStack();
 }
