@@ -6,11 +6,6 @@ int statusTable[0];
 int slotPosition[0];
 int file[0];
 
-int file_stackOrigin(void)
-{
-    return ((file[0] + 1) / 2) + 1;
-}
-
 void insertProgramIntoMemory(void)
 {
     int instructionCount;
@@ -73,49 +68,55 @@ void kill(int process)
     }
 }
 
+void saveHeap(void)
+{
+    int lastRemainingItemIndex;
+    int heap[0];
+    int endOfStack;
+
+    lastRemainingItemIndex = context[9] - 7168;
+    assignPointer(heap, context[9]);
+    assignPointer(file, slotPosition[statusTable[10]] + 1537);
+
+    endOfStack = 1023;
+
+    while (lastRemainingItemIndex >= 0)
+    {
+        file[endOfStack - lastRemainingItemIndex] = heap[lastRemainingItemIndex];
+        lastRemainingItemIndex = lastRemainingItemIndex - 1;
+    }
+}
+
 void saveStack(void)
 {
-    int remainingItems;
+    int remainingItemIndex;
     int stack[0];
 
-    remainingItems = 8192 - context[3];
+    remainingItemIndex = 8192 - context[3];
     assignPointer(stack, context[3]);
-    assignPointer(file, file_stackOrigin() + slotPosition[statusTable[10]]);
+    assignPointer(file, slotPosition[statusTable[10]] + 1537);
 
-    while (remainingItems > 0)
+    while (remainingItemIndex >= 0)
     {
-        file[remainingItems] = stack[remainingItems];
-        remainingItems = remainingItems - 1;
+        file[remainingItemIndex] = stack[remainingItemIndex];
+        remainingItemIndex = remainingItemIndex - 1;
     }
+    saveHeap();
 }
 
 void saveState(void)
 {
-    int stackpointer;
-    int slot;
-    int minSP;
-    slot = slotPosition[statusTable[10]];
     output(1360 + statusTable[10]); // 55
-    assignPointer(file, slot);
-    stackpointer = context[3];
-    minSP = file_stackOrigin() + 6777;
-    if (stackpointer < minSP)
-    {
-        output(57344); // E000
-        kill(statusTable[10]);
-        return;
-    }
-    assignPointer(file, slot + 1423); // file += 1423
-    file[0] = context[8];             // Acumulator
-    file[1] = context[7];             // Temporary Register
-    file[2] = context[6];             // Second Register
-    file[3] = context[5];             // Frame Pointer
-    file[4] = context[4];             // Global Pointer
-    file[5] = context[3];             // SP
-    file[6] = context[2];             // PC
-    file[7] = context[1];             // SpecReg
-    file[8] = context[0];             // SysCall
-
+    assignPointer(file, slotPosition[statusTable[10]] + 2561);
+    file[0] = context[8]; // Acumulator
+    file[1] = context[7]; // Temporary Register
+    file[2] = context[6]; // Second Register
+    file[3] = context[5]; // Frame Pointer
+    file[4] = context[4]; // Global Pointer
+    file[5] = context[3]; // SP
+    file[6] = context[2]; // PC
+    file[7] = context[1]; // SpecReg
+    file[8] = context[0]; // SysCall
     saveStack();
 }
 
