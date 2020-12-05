@@ -138,22 +138,20 @@ void loadStack(void)
 
 void continueExecution(void)
 {
-    int slot;
-    slot = slotPosition[nextProgram];
     output(13524672 + nextProgram); // CESEC0
     insertProgramIntoMemory();
-    assignPointer(file, slot + 1423);
+    assignPointer(file, slotPosition[nextProgram] + 2561);
     // Load context
-    context[8] = file[0]; // Acumulator
-    context[7] = file[1]; // Temporary Register
-    context[6] = file[2]; // Second Register
-    context[5] = file[3]; // Frame Pointer
+    context[9] = file[9]; // Heap Array
+    context[8] = file[8]; // Acumulator
+    context[7] = file[7]; // Temporary Register
+    context[6] = file[6]; // Second Register
+    context[5] = file[5]; // Frame Pointer
     context[4] = file[4]; // Global Pointer
-    context[3] = file[5]; // SP
-    context[2] = file[6]; // PC
-    context[1] = file[7]; // SpecReg
+    context[3] = file[3]; // SP
+    context[2] = file[2]; // PC
+    context[1] = file[1]; // SpecReg
 
-    assignPointer(file, slot);
     loadStack();
 }
 
