@@ -2,6 +2,7 @@ int main(void)
 {
     int osLength;
     int index;
+    int data;
     int osStorage[0];
     int osRuntime[0];
 
@@ -11,8 +12,10 @@ int main(void)
     index = 0;
     while (index < osLength)
     {
-        osRuntime[index] = osStorage[index];
-        index = index + 1;
+        data = osStorage[index / 2];
+        osRuntime[index] = extractFirstHW(data);
+        osRuntime[index + 1] = extractSecondHW(data);
+        index = index + 2;
     }
     output(osRuntime[osLength - 1]);
     output(49568); // C1A0
