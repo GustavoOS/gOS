@@ -3,12 +3,8 @@ int nextProgram;
 
 int context[0];
 int statusTable[0];
+int slotPosition[0];
 int file[0];
-
-int getSlot(int fileIndex)
-{
-    return (fileIndex * 1432) + 18444;
-}
 
 int file_stackOrigin(void)
 {
@@ -23,7 +19,7 @@ void insertProgramIntoMemory(void)
     int data;
     int program[0];
 
-    slotStart = getSlot(nextProgram);
+    slotStart = slotPosition[nextProgram];
     assignPointer(file, slotStart);
     assignPointer(program, 0);
     instructionCount = file[0];
@@ -52,21 +48,6 @@ void execute(void)
     statusTable[11] = nextProgram; // Leading process
     statusTable[nextProgram] = 2;  // Running
 }
-
-// int findNextProcess(int current, int condition)
-// {
-//     int next;
-//     next = (current + 1) | 10;
-//     while (next != current)
-//     {
-//         if (statusTable[next] == condition)
-//             return next;
-//         next = (next + 1) | 10;
-//     }
-//     if (statusTable[current] == condition)
-//         return current;
-//     return null;
-// }
 
 void validateNextProgram(int candidate)
 {
@@ -99,7 +80,7 @@ void saveStack(void)
 
     remainingItems = 8192 - context[3];
     assignPointer(stack, context[3]);
-    assignPointer(file, file_stackOrigin() + getSlot(statusTable[10]));
+    assignPointer(file, file_stackOrigin() + slotPosition[statusTable[10]]);
 
     while (remainingItems > 0)
     {
@@ -113,9 +94,9 @@ void saveState(void)
     int stackpointer;
     int slot;
     int minSP;
-    slot = getSlot(statusTable[10]);
+    slot = slotPosition[statusTable[10]];
     output(1360 + statusTable[10]); // 55
-    assignPointer(file, getSlot(statusTable[10]));
+    assignPointer(file, slot);
     stackpointer = context[3];
     minSP = file_stackOrigin() + 6777;
     if (stackpointer < minSP)
@@ -145,7 +126,7 @@ void loadStack(void)
 
     remainingItems = 8192 - context[3];
     assignPointer(stack, context[3]);
-    assignPointer(file, file_stackOrigin() + getSlot(nextProgram));
+    assignPointer(file, file_stackOrigin() + slotPosition[nextProgram]);
 
     while (remainingItems > 0)
     {
@@ -157,7 +138,7 @@ void loadStack(void)
 void continueExecution(void)
 {
     int slot;
-    slot = getSlot(nextProgram);
+    slot = slotPosition[nextProgram];
     output(13524672 + nextProgram); // CESEC0
     insertProgramIntoMemory();
     assignPointer(file, slot + 1423);
@@ -201,19 +182,6 @@ void processIORequest(void)
     saveState();
 }
 
-// void listProcesses(int condition)
-// {
-//     int result;
-//     result = 0;
-//     while (null == null)
-//     {
-//         result = findNextProcess(result, condition);
-//         output(result);
-//         if (input() != 0)
-//             return;
-//     }
-// }
-
 void takeUserAction(void)
 {
     while (nextProgram == null)
@@ -237,20 +205,6 @@ void takeUserAction(void)
             output(1027244); // FACAC
             kill(input());
         }
-
-        // output(51966); // CAFE
-        // if (input() != 0)
-        // {
-        //     output(831468); // CAFEC
-        //     listProcesses(2);
-        // }
-
-        // output(212724432); // CADEAD0
-        // if (input() != 0)
-        // {
-        //     output(3403590924); // CADEAD0C
-        //     listProcesses(3);
-        // }
     }
 }
 
@@ -275,16 +229,19 @@ void dispatchSystemCalls(int systemCall)
     output(systemCall);
     if (systemCall == 4)
     {
+        // BIOS
         firstRun();
         return;
     }
     if (systemCall == 2)
     {
+        // End of Program
         kill(statusTable[10]);
         return;
     }
     if (systemCall == 1)
     {
+        // IO Request
         processIORequest();
         return;
     }
@@ -296,6 +253,7 @@ int main(void)
     // Set Variables
     null = 0 - 1;
     assignPointer(statusTable, 18432);
+    assignPointer(slotPosition, 9740);
     assignPointer(context, 6135);
     nextProgram = null;
 
