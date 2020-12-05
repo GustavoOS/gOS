@@ -5,9 +5,9 @@ int main(void)
     int osStorage[0];
     int osRuntime[0];
 
-    assignPointer(osRuntime, 2048);
-    assignPointer(osStorage, 16385);
-    osLength = readFromMemory(16384);
+    assignPointer(osRuntime, 3072);
+    assignPointer(osStorage, 8193);
+    osLength = readFromMemory(8192);
     index = 0;
     while (index < osLength)
     {
@@ -15,6 +15,6 @@ int main(void)
         index = index + 1;
     }
     output(osRuntime[osLength - 1]);
-    output(49568);
+    output(49568); // C1A0
     return 0;
 }
