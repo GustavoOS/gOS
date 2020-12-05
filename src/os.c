@@ -37,7 +37,7 @@ void execute(void)
     context[1] = 0;    // SpecReg
     context[2] = 0;    // PC
     context[3] = 8191; // SP
-    context[8] = 0;    // Acumulator
+    context[9] = 7168; // Heap
 
     statusTable[11] = nextProgram; // Leading process
     statusTable[nextProgram] = 2;  // Running
@@ -45,11 +45,9 @@ void execute(void)
 
 void validateNextProgram(int candidate)
 {
-    if (candidate > 9)
-        return;
-    if (statusTable[candidate] == 0)
-        return;
-    nextProgram = candidate;
+    candidate = candidate | 10;
+    if (statusTable[candidate] > 0)
+        nextProgram = candidate;
 }
 
 void fastKill(int process)
@@ -60,146 +58,9 @@ void fastKill(int process)
 
 void kill(int process)
 {
-    if (process < 10)
-    {
-        output(1027232 + process); // Faca
-        fastKill(process);
-    }
-}
-
-void saveHeap(void)
-{
-    int lastRemainingItemIndex;
-    int heap[0];
-    int endOfStack;
-
-    lastRemainingItemIndex = context[9] - 7168;
-    assignPointer(heap, context[9]);
-    assignPointer(file, slotPosition[statusTable[10]] + 1537);
-
-    endOfStack = 1023;
-
-    while (lastRemainingItemIndex >= 0)
-    {
-        file[endOfStack - lastRemainingItemIndex] = heap[lastRemainingItemIndex];
-        lastRemainingItemIndex = lastRemainingItemIndex - 1;
-    }
-}
-
-void saveStack(void)
-{
-    int lastRemainingItemIndex;
-    int stack[0];
-
-    lastRemainingItemIndex = 8191 - context[3];
-    assignPointer(stack, context[3]);
-    assignPointer(file, slotPosition[statusTable[10]] + 1537);
-
-    while (lastRemainingItemIndex >= 0)
-    {
-        file[lastRemainingItemIndex] = stack[lastRemainingItemIndex];
-        lastRemainingItemIndex = lastRemainingItemIndex - 1;
-    }
-    saveHeap();
-}
-
-void saveState(void)
-{
-    output(1360 + statusTable[10]); // 55
-    assignPointer(file, slotPosition[statusTable[10]] + 2561);
-    file[0] = context[0]; // SysCall
-    file[1] = context[1]; // SpecReg
-    file[2] = context[2]; // PC
-    file[3] = context[3]; // SP
-    file[4] = context[4]; // Global Pointer
-    file[5] = context[5]; // Frame Pointer
-    file[6] = context[6]; // Second Register
-    file[7] = context[7]; // Temporary Register
-    file[8] = context[8]; // Acumulator
-    file[9] = context[9]; // Heap Array Register
-    saveStack();
-}
-
-void loadHeap(void)
-{
-    int lastRemainingItemIndex;
-    int heap[0];
-    int endOfStack;
-
-    lastRemainingItemIndex = context[9] - 7168;
-    assignPointer(heap, context[9]);
-    assignPointer(file, slotPosition[statusTable[10]] + 1537);
-
-    endOfStack = 1023;
-
-    while (lastRemainingItemIndex >= 0)
-    {
-        heap[lastRemainingItemIndex] = file[endOfStack - lastRemainingItemIndex];
-        lastRemainingItemIndex = lastRemainingItemIndex - 1;
-    }
-}
-
-void loadStack(void)
-{
-    int lastRemainingItemIndex;
-    int stack[0];
-
-    lastRemainingItemIndex = 8191 - context[3];
-    assignPointer(stack, context[3]);
-    assignPointer(file, slotPosition[nextProgram] + 1537);
-
-    while (lastRemainingItemIndex >= 0)
-    {
-        stack[lastRemainingItemIndex] = file[lastRemainingItemIndex];
-        lastRemainingItemIndex = lastRemainingItemIndex - 1;
-    }
-
-    loadHeap();
-}
-
-void continueExecution(void)
-{
-    output(13524672 + nextProgram); // CESEC0
-    insertProgramIntoMemory();
-    assignPointer(file, slotPosition[nextProgram] + 2561);
-    // Load context
-    context[1] = file[1]; // SpecReg
-    context[2] = file[2]; // PC
-    context[3] = file[3]; // SP
-    context[4] = file[4]; // Global Pointer
-    context[5] = file[5]; // Frame Pointer
-    context[6] = file[6]; // Second Register
-    context[7] = file[7]; // Temporary Register
-    context[8] = file[8]; // Acumulator
-    context[9] = file[9]; // Heap Array
-
-    loadStack();
-}
-
-void callExecuter(void)
-{
-    if (statusTable[nextProgram] == 1)
-    {
-        execute();
-        return;
-    }
-    statusTable[nextProgram] = 2;
-    continueExecution();
-    statusTable[11] = nextProgram; // The leading process
-}
-
-void processIORequest(void)
-{
-    context[2] = context[2] + 1; // PC++
-    if (statusTable[10] == statusTable[11])
-    {
-        output(256 + statusTable[10]); // 10
-        nextProgram = statusTable[10];
-        return;
-    }
-    output(57360); // E010
-    statusTable[statusTable[10]] = 3;
-    saveState();
+    process = process | 10;
+    output(1027232 + process); // Faca
+    fastKill(process);
 }
 
 void takeUserAction(void)
@@ -208,38 +69,21 @@ void takeUserAction(void)
     {
 
         output(49374); // C0DE
-        if (input() != 0)
-        {
-            output(789996); // C0DEC
-            validateNextProgram(input());
-            if (nextProgram != null)
-            {
-                callExecuter();
-                return;
-            }
-        }
-
-        output(64202); // FACA
-        if (input() != 0)
-        {
-            output(1027244); // FACAC
-            kill(input());
-        }
+        validateNextProgram(input());
     }
+
+    execute();
 }
 
 void firstRun(void)
 {
-    fastKill(0);
-    fastKill(1);
-    fastKill(2);
-    fastKill(3);
-    fastKill(4);
-    fastKill(5);
-    fastKill(6);
-    fastKill(7);
-    fastKill(8);
-    fastKill(9);
+    int i;
+    i = 0;
+    while (i < 10)
+    {
+        fastKill(i);
+        i = i + 1;
+    }
 
     statusTable[10] = null;
 }
@@ -256,25 +100,24 @@ void dispatchSystemCalls(int systemCall)
     if (systemCall == 2)
     {
         // End of Program
+        output(3599);
         kill(statusTable[10]);
         return;
     }
-    if (systemCall == 1)
+    if(systemCall == 1)
     {
-        // IO Request
-        processIORequest();
-        return;
+        context[2] = context[2] + 1;
+        nextProgram = statusTable[10];
     }
-    saveState();
 }
 
 int main(void)
 {
     // Set Variables
     null = 0 - 1;
-    assignPointer(statusTable, 18432);
-    assignPointer(slotPosition, 9740);
-    assignPointer(context, 6135);
+    assignPointer(statusTable, 9729);
+    assignPointer(slotPosition, 9741);
+    assignPointer(context, 7157);
     nextProgram = null;
 
     dispatchSystemCalls(context[0]);
