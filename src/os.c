@@ -89,17 +89,17 @@ void saveHeap(void)
 
 void saveStack(void)
 {
-    int remainingItemIndex;
+    int lastRemainingItemIndex;
     int stack[0];
 
-    remainingItemIndex = 8192 - context[3];
+    lastRemainingItemIndex = 8192 - context[3];
     assignPointer(stack, context[3]);
     assignPointer(file, slotPosition[statusTable[10]] + 1537);
 
-    while (remainingItemIndex >= 0)
+    while (lastRemainingItemIndex >= 0)
     {
-        file[remainingItemIndex] = stack[remainingItemIndex];
-        remainingItemIndex = remainingItemIndex - 1;
+        file[lastRemainingItemIndex] = stack[lastRemainingItemIndex];
+        lastRemainingItemIndex = lastRemainingItemIndex - 1;
     }
     saveHeap();
 }
