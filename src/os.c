@@ -15,10 +15,9 @@ void insertProgramIntoMemory(void)
     int program[0];
 
     slotStart = slotPosition[nextProgram];
-    assignPointer(file, slotStart);
     assignPointer(program, 0);
-    instructionCount = file[0];
     assignPointer(file, slotStart + 1);
+    instructionCount = readFromMemory(slotStart);
     copied = 0;
     while (copied < instructionCount)
     {
