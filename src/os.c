@@ -108,15 +108,16 @@ void saveState(void)
 {
     output(1360 + statusTable[10]); // 55
     assignPointer(file, slotPosition[statusTable[10]] + 2561);
-    file[0] = context[8]; // Acumulator
-    file[1] = context[7]; // Temporary Register
-    file[2] = context[6]; // Second Register
-    file[3] = context[5]; // Frame Pointer
+    file[0] = context[0]; // SysCall
+    file[1] = context[1]; // SpecReg
+    file[2] = context[2]; // PC
+    file[3] = context[3]; // SP
     file[4] = context[4]; // Global Pointer
-    file[5] = context[3]; // SP
-    file[6] = context[2]; // PC
-    file[7] = context[1]; // SpecReg
-    file[8] = context[0]; // SysCall
+    file[5] = context[5]; // Frame Pointer
+    file[6] = context[6]; // Second Register
+    file[7] = context[7]; // Temporary Register
+    file[8] = context[8]; // Acumulator
+    file[9] = context[9]; // Heap Array Register
     saveStack();
 }
 
