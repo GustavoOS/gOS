@@ -91,7 +91,7 @@ void saveStack(void)
     int lastRemainingItemIndex;
     int stack[0];
 
-    lastRemainingItemIndex = 8192 - context[3];
+    lastRemainingItemIndex = 8191 - context[3];
     assignPointer(stack, context[3]);
     assignPointer(file, slotPosition[statusTable[10]] + 1537);
 
@@ -120,20 +120,41 @@ void saveState(void)
     saveStack();
 }
 
+void loadHeap(void)
+{
+    int lastRemainingItemIndex;
+    int heap[0];
+    int endOfStack;
+
+    lastRemainingItemIndex = context[9] - 7168;
+    assignPointer(heap, context[9]);
+    assignPointer(file, slotPosition[statusTable[10]] + 1537);
+
+    endOfStack = 1023;
+
+    while (lastRemainingItemIndex >= 0)
+    {
+        heap[lastRemainingItemIndex] = file[endOfStack - lastRemainingItemIndex];
+        lastRemainingItemIndex = lastRemainingItemIndex - 1;
+    }
+}
+
 void loadStack(void)
 {
-    int remainingItems;
+    int lastRemainingItemIndex;
     int stack[0];
 
-    remainingItems = 8192 - context[3];
+    lastRemainingItemIndex = 8191 - context[3];
     assignPointer(stack, context[3]);
-    assignPointer(file, file_stackOrigin() + slotPosition[nextProgram]);
+    assignPointer(file, slotPosition[nextProgram] + 1537);
 
-    while (remainingItems > 0)
+    while (lastRemainingItemIndex >= 0)
     {
-        stack[remainingItems] = file[remainingItems];
-        remainingItems = remainingItems - 1;
+        stack[lastRemainingItemIndex] = file[lastRemainingItemIndex];
+        lastRemainingItemIndex = lastRemainingItemIndex - 1;
     }
+
+    loadHeap();
 }
 
 void continueExecution(void)
