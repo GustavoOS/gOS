@@ -160,49 +160,79 @@ void takeUserAction(void)
 
 void firstRun(void)
 {
-    int i;
-    i = 0;
-    while (i < 10)
+    int program;
+    program = 0;
+    while (program < 10)
     {
-        fastKill(i);
-        i = i + 1;
+        fastKill(program);
+        program = program + 1;
     }
 
     statusTable[10] = null;
 }
 
-void dispatchSystemCalls(int systemCall)
+void processIO(void)
 {
-    output(systemCall);
-    if (systemCall == 4)
+    context[2] = context[2] + 1;
+    if (statusTable[10] == statusTable[11])
     {
-        // BIOS
+        nextProgram = statusTable[10]; // Continue execution
+        return;
+    }
+    saveState();
+    statusTable[statusTable[10]] = 3; // Block
+}
+
+void schedule(void)
+{
+    int nextCandidate;
+    nextCandidate = statusTable[10];
+    while (nextProgram < 0)
+    {
+        nextCandidate = (nextCandidate + 1) | 10;
+        if (statusTable[nextCandidate] == 2)
+            nextProgram = nextCandidate;
+    }
+
+    if (statusTable[10] != nextProgram)
+    {
+        saveState();
+        insertProgramIntoMemory();
+        recoverState();
+    };
+}
+
+void dispatchSystemCall(void)
+{
+    output(6029312 + context[0]); // SC + no of file
+
+    if (context[0] == 4) // BIOS
+    {
         firstRun();
         return;
     }
-    if (systemCall == 2)
+
+    if (context[0] == 2) // End Of Program
     {
-        // End of Program
         output(3599); // E0F
         kill(statusTable[10]);
         return;
     }
-    if (systemCall == 1) // IO
+
+    if (context[0] == 1) // IO
     {
-        context[2] = context[2] + 1;
-        if (statusTable[10] == statusTable[11])
-        {
-            nextProgram = statusTable[10]; // Continue execution
-            return;
-        }
-        saveState();
-        statusTable[statusTable[10]] = 3; // Block
+        processIO();
         return;
     }
-    if (systemCall == 3)
+
+    if (context[0] == 3) // User request
     {
         saveState();
+        return;
     }
+
+    if (context[0] == 0) // Scheduler
+        schedule();
 }
 
 int main(void)
@@ -214,7 +244,7 @@ int main(void)
     assignPointer(context, 7157);
     nextProgram = null;
 
-    dispatchSystemCalls(context[0]);
+    dispatchSystemCall();
     if (nextProgram < 0)
         takeUserAction();
 
