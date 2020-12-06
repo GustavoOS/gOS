@@ -140,7 +140,7 @@ void kill(int process)
 
 void takeUserAction(void)
 {
-    while (nextProgram == null)
+    while (nextProgram < 0)
     {
         output(49374); // C0DE
         validateNextProgram(input());
@@ -205,7 +205,7 @@ int main(void)
     nextProgram = null;
 
     dispatchSystemCalls(context[0]);
-    if (nextProgram == null)
+    if (nextProgram < 0)
         takeUserAction();
 
     output(3248488448 + nextProgram); // CIAO + Process
