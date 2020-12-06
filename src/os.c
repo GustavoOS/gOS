@@ -146,14 +146,14 @@ void takeUserAction(void)
         validateNextProgram(input());
     }
 
-    if(statusTable[nextProgram] < 2)
+    if (statusTable[nextProgram] < 2)
     {
         execute();
         return;
     }
 
     // continue execution
-    if(statusTable[10] != nextProgram)
+    if (statusTable[10] != nextProgram)
         insertProgramIntoMemory();
     recoverState();
 }
@@ -187,10 +187,16 @@ void dispatchSystemCalls(int systemCall)
         kill(statusTable[10]);
         return;
     }
-    if (systemCall == 1)
+    if (systemCall == 1) // IO
     {
         context[2] = context[2] + 1;
-        nextProgram = statusTable[10];
+        if (statusTable[10] == statusTable[11])
+        {
+            nextProgram = statusTable[10]; // Continue execution
+            return;
+        }
+        saveState();
+        statusTable[statusTable[10]] = 3; // Block
         return;
     }
     if (systemCall == 3)
