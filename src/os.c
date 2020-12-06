@@ -5,6 +5,81 @@ int context[0];
 int statusTable[0];
 int slotPosition[0];
 int file[0];
+int stack[0];
+
+void copyFromFileToStack(int numberOfItems)
+{
+    while (numberOfItems >= 0)
+    {
+        stack[numberOfItems] = file[numberOfItems];
+        numberOfItems = numberOfItems - 1;
+    }
+}
+
+void recoverState()
+{
+    int i;
+    int slot;
+
+    slot = slotPosition[nextProgram];
+    assignPointer(file, slot + 2561);
+
+    // Load Context
+    i = 0;
+    while (i < 10)
+    {
+        context[i] = file[i];
+        i = i + 1;
+    }
+
+    // Load Stack
+    assignPointer(file, slot + 1537);
+    assignPointer(stack, context[3]);
+    copyFromFileToStack(8191 - context[3]);
+
+    // Load heap
+    assignPointer(stack, 7168);
+    i = context[9] - 7168;
+    assignPointer(file, slot + 2560 - i);
+    copyFromFileToStack(i);
+}
+
+void copyFromStackToFile(int numberOfItems)
+{
+    while (numberOfItems >= 0)
+    {
+        file[numberOfItems] = stack[numberOfItems];
+        numberOfItems = numberOfItems - 1;
+    }
+}
+
+void saveState()
+{
+    int i;
+    int slot;
+
+    slot = slotPosition[statusTable[10]];
+    assignPointer(file, slot + 2561);
+
+    // Save Context
+    i = 0;
+    while (i < 10)
+    {
+        file[i] = context[i];
+        i = i + 1;
+    }
+
+    // Save Stack
+    assignPointer(file, slot + 1537);
+    assignPointer(stack, context[3]);
+    copyFromStackToFile(8191 - context[3]);
+
+    // Save heap
+    assignPointer(stack, 7168);
+    i = context[9] - 7168;
+    assignPointer(file, slot + 2560 - i);
+    copyFromStackToFile(i);
+}
 
 void insertProgramIntoMemory(void)
 {
@@ -67,12 +142,16 @@ void takeUserAction(void)
 {
     while (nextProgram == null)
     {
-
         output(49374); // C0DE
         validateNextProgram(input());
     }
 
-    execute();
+    if(statusTable[nextProgram] < 2)
+    {
+        execute();
+        return;
+    }
+    // TODO continue execution of stopped process
 }
 
 void firstRun(void)
@@ -100,14 +179,19 @@ void dispatchSystemCalls(int systemCall)
     if (systemCall == 2)
     {
         // End of Program
-        output(3599);
+        output(3599); // E0F
         kill(statusTable[10]);
         return;
     }
-    if(systemCall == 1)
+    if (systemCall == 1)
     {
         context[2] = context[2] + 1;
         nextProgram = statusTable[10];
+        return;
+    }
+    if (systemCall == 3)
+    {
+        saveState();
     }
 }
 
