@@ -16,7 +16,7 @@ void copyFromFileToStack(int numberOfItems)
     }
 }
 
-void recoverState()
+void recoverState(void)
 {
     int i;
     int slot;
@@ -53,7 +53,7 @@ void copyFromStackToFile(int numberOfItems)
     }
 }
 
-void saveState()
+void saveState(void)
 {
     int i;
     int slot;
@@ -151,7 +151,11 @@ void takeUserAction(void)
         execute();
         return;
     }
-    // TODO continue execution of stopped process
+
+    // continue execution
+    if(statusTable[10] != nextProgram)
+        insertProgramIntoMemory();
+    recoverState();
 }
 
 void firstRun(void)
