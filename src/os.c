@@ -153,6 +153,7 @@ void takeUserAction(void)
     }
 
     // continue execution
+    statusTable[11] = nextProgram;
     if (statusTable[10] != nextProgram)
         insertProgramIntoMemory();
     recoverState();
