@@ -116,6 +116,7 @@ void execute(void)
 
     statusTable[11] = nextProgram; // Leading process
     statusTable[nextProgram] = 2;  // Running
+    statusTable[12] = statusTable[12] + 1;
 }
 
 void validateNextProgram(int candidate)
@@ -128,7 +129,10 @@ void validateNextProgram(int candidate)
 void fastKill(int process)
 {
     if (statusTable[process] > 1)
+    {
+        statusTable[12] = statusTable[12] - 1;
         statusTable[process] = 1;
+    }
 }
 
 void kill(int process)
@@ -146,57 +150,121 @@ void takeUserAction(void)
         validateNextProgram(input());
     }
 
-    if(statusTable[nextProgram] < 2)
+    if (statusTable[nextProgram] < 2)
     {
         execute();
         return;
     }
 
     // continue execution
-    if(statusTable[10] != nextProgram)
+    if (statusTable[nextProgram] == 3) // IO Unlock
+        statusTable[12] = statusTable + 1;
+
+    statusTable[11] = nextProgram;
+    if (statusTable[10] != nextProgram)
         insertProgramIntoMemory();
     recoverState();
 }
 
 void firstRun(void)
 {
-    int i;
-    i = 0;
-    while (i < 10)
+    int program;
+    program = 0;
+    while (program < 10)
     {
-        fastKill(i);
-        i = i + 1;
+        fastKill(program);
+        program = program + 1;
     }
 
     statusTable[10] = null;
+    statusTable[11] = null;
+    statusTable[12] = 0;
 }
 
-void dispatchSystemCalls(int systemCall)
+void findNextProcess(void)
 {
-    output(systemCall);
-    if (systemCall == 4)
+    int nextCandidate;
+    int i;
+    i = 0;
+    nextCandidate = statusTable[10];
+    while (nextProgram < 0)
     {
-        // BIOS
-        firstRun();
-        return;
+        nextCandidate = (nextCandidate + 1) | 10;
+        if (i == 10)
+            return;
+        if (statusTable[nextCandidate] == 2)
+            nextProgram = nextCandidate;
+        i = i + 1;
     }
-    if (systemCall == 2)
+}
+
+void schedule(void)
+{
+
+    if (statusTable[12] == 1)
     {
-        // End of Program
-        output(3599); // E0F
-        kill(statusTable[10]);
-        return;
-    }
-    if (systemCall == 1)
-    {
-        context[2] = context[2] + 1;
         nextProgram = statusTable[10];
         return;
     }
-    if (systemCall == 3)
+
+    findNextProcess();
+    saveState();
+    insertProgramIntoMemory();
+    recoverState();
+}
+
+void processIO(void)
+{
+    context[2] = context[2] + 1;
+    if (statusTable[10] == statusTable[11])
+    {
+        nextProgram = statusTable[10]; // Continue execution
+        return;
+    }
+    saveState();
+    statusTable[statusTable[10]] = 3; // Block
+    if (statusTable[12] > 1)
+        schedule();
+    statusTable[12] = statusTable[12] - 1; // Inactive process
+}
+
+void dispatchSystemCall(void)
+{
+    output(6029312 + context[0]); // SC + no of file
+
+    if (context[0] == 4) // BIOS
+    {
+        firstRun();
+        return;
+    }
+
+    if (context[0] == 2) // End Of Program
+    {
+        output(3599); // E0F
+        kill(statusTable[10]);
+        findNextProcess();
+        if (nextProgram >= 0)
+        {
+            insertProgramIntoMemory();
+            recoverState();
+        }
+        return;
+    }
+
+    if (context[0] == 1) // IO
+    {
+        processIO();
+        return;
+    }
+
+    if (context[0] == 3) // User request
     {
         saveState();
+        return;
     }
+
+    if (context[0] == 0) // Scheduler
+        schedule();
 }
 
 int main(void)
@@ -204,11 +272,11 @@ int main(void)
     // Set Variables
     null = 0 - 1;
     assignPointer(statusTable, 9729);
-    assignPointer(slotPosition, 9741);
+    assignPointer(slotPosition, 9742);
     assignPointer(context, 7157);
     nextProgram = null;
 
-    dispatchSystemCalls(context[0]);
+    dispatchSystemCall();
     if (nextProgram < 0)
         takeUserAction();
 
