@@ -181,9 +181,25 @@ void firstRun(void)
     statusTable[12] = 0;
 }
 
-void schedule(void)
+void findNextProcess(void)
 {
     int nextCandidate;
+    int i;
+    i = 0;
+    nextCandidate = statusTable[10];
+    while (nextProgram < 0)
+    {
+        nextCandidate = (nextCandidate + 1) | 10;
+        if (i == 10)
+            return;
+        if (statusTable[nextCandidate] == 2)
+            nextProgram = nextCandidate;
+        i = i + 1;
+    }
+}
+
+void schedule(void)
+{
 
     if (statusTable[12] == 1)
     {
@@ -191,14 +207,7 @@ void schedule(void)
         return;
     }
 
-    nextCandidate = statusTable[10];
-    while (nextProgram < 0)
-    {
-        nextCandidate = (nextCandidate + 1) | 10;
-        if (statusTable[nextCandidate] == 2)
-            nextProgram = nextCandidate;
-    }
-
+    findNextProcess();
     saveState();
     insertProgramIntoMemory();
     recoverState();
@@ -233,6 +242,12 @@ void dispatchSystemCall(void)
     {
         output(3599); // E0F
         kill(statusTable[10]);
+        findNextProcess();
+        if (nextProgram >= 0)
+        {
+            insertProgramIntoMemory();
+            recoverState();
+        }
         return;
     }
 
