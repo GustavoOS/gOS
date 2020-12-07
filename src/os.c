@@ -116,6 +116,7 @@ void execute(void)
 
     statusTable[11] = nextProgram; // Leading process
     statusTable[nextProgram] = 2;  // Running
+    statusTable[12] = statusTable[12] + 1;
 }
 
 void validateNextProgram(int candidate)
@@ -128,7 +129,10 @@ void validateNextProgram(int candidate)
 void fastKill(int process)
 {
     if (statusTable[process] > 1)
+    {
+        statusTable[12] = statusTable[12] - 1;
         statusTable[process] = 1;
+    }
 }
 
 void kill(int process)
@@ -153,6 +157,9 @@ void takeUserAction(void)
     }
 
     // continue execution
+    if (statusTable[nextProgram] == 3) // IO Unlock
+        statusTable[12] = statusTable + 1;
+
     statusTable[11] = nextProgram;
     if (statusTable[10] != nextProgram)
         insertProgramIntoMemory();
@@ -170,6 +177,31 @@ void firstRun(void)
     }
 
     statusTable[10] = null;
+    statusTable[11] = null;
+    statusTable[12] = 0;
+}
+
+void schedule(void)
+{
+    int nextCandidate;
+
+    if (statusTable[12] == 1)
+    {
+        nextProgram = statusTable[10];
+        return;
+    }
+
+    nextCandidate = statusTable[10];
+    while (nextProgram < 0)
+    {
+        nextCandidate = (nextCandidate + 1) | 10;
+        if (statusTable[nextCandidate] == 2)
+            nextProgram = nextCandidate;
+    }
+
+    saveState();
+    insertProgramIntoMemory();
+    recoverState();
 }
 
 void processIO(void)
@@ -182,25 +214,9 @@ void processIO(void)
     }
     saveState();
     statusTable[statusTable[10]] = 3; // Block
-}
-
-void schedule(void)
-{
-    int nextCandidate;
-    nextCandidate = statusTable[10];
-    while (nextProgram < 0)
-    {
-        nextCandidate = (nextCandidate + 1) | 10;
-        if (statusTable[nextCandidate] == 2)
-            nextProgram = nextCandidate;
-    }
-
-    if (statusTable[10] != nextProgram)
-    {
-        saveState();
-        insertProgramIntoMemory();
-        recoverState();
-    };
+    if (statusTable[12] > 1)
+        schedule();
+    statusTable[12] = statusTable[12] - 1; // Inactive process
 }
 
 void dispatchSystemCall(void)
@@ -241,7 +257,7 @@ int main(void)
     // Set Variables
     null = 0 - 1;
     assignPointer(statusTable, 9729);
-    assignPointer(slotPosition, 9741);
+    assignPointer(slotPosition, 9742);
     assignPointer(context, 7157);
     nextProgram = null;
 
