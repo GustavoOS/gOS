@@ -121,7 +121,7 @@ void execute(void)
 
 void validateNextProgram(int candidate)
 {
-    candidate = candidate | 10;
+    candidate = candidate % 10;
     if (statusTable[candidate] > 0)
         nextProgram = candidate;
 }
@@ -137,7 +137,7 @@ void fastKill(int process)
 
 void kill(int process)
 {
-    process = process | 10;
+    process = process % 10;
     output(1027232 + process); // Faca
     fastKill(process);
 }
@@ -189,7 +189,7 @@ void findNextProcess(void)
     nextCandidate = statusTable[10];
     while (nextProgram < 0)
     {
-        nextCandidate = (nextCandidate + 1) | 10;
+        nextCandidate = (nextCandidate + 1) % 10;
         if (i == 10)
             return;
         if (statusTable[nextCandidate] == 2)
