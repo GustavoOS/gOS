@@ -3,6 +3,7 @@ int nextProgram;
 
 int context[0];
 int statusTable[0];
+int nameTable[0];
 int slotPosition[0];
 int file[0];
 int stack[0];
@@ -121,9 +122,9 @@ void execute(void)
 
 void validateNextProgram(int candidate)
 {
-    candidate = candidate % 10;
-    if (statusTable[candidate] > 0)
-        nextProgram = candidate;
+    if (candidate >= 0)
+        if (statusTable[candidate] > 0)
+            nextProgram = candidate;
 }
 
 void fastKill(int process)
@@ -142,12 +143,25 @@ void kill(int process)
     fastKill(process);
 }
 
+int findProgramByName(int name)
+{
+    int index;
+    index = 0;
+    while (index < 10)
+    {
+        if (nameTable[index] == name)
+            return index;
+        index = index + 1;
+    }
+    return null;
+}
+
 void takeUserAction(void)
 {
     while (nextProgram < 0)
     {
         output(49374); // C0DE
-        validateNextProgram(input());
+        validateNextProgram(findProgramByName(input()));
     }
 
     if (statusTable[nextProgram] < 2)
@@ -274,12 +288,13 @@ int main(void)
     assignPointer(statusTable, 9729);
     assignPointer(slotPosition, 9742);
     assignPointer(context, 7157);
+    assignPointer(nameTable, 9752);
     nextProgram = null;
 
     dispatchSystemCall();
     if (nextProgram < 0)
         takeUserAction();
 
-    output(3248488448 + nextProgram); // CIAO + Process
+    output(3248488448 + nameTable[nextProgram]); // CIAO + Program name
     return 0;
 }
