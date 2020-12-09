@@ -31,22 +31,30 @@ void editFile(int id)
     option = null;
     while (option != 0)
     {
-        instr = readInstruction();
-        output((instructionIndex << 16) + instr);
+        output(((instructionIndex + 1) << 16) + readInstruction());
+        option = input();
         if (option == 1) // advance
         {
             fileIndex = fileIndex + (instructionIndex % 2);
+            instructionIndex = instructionIndex + 1;
             if (fileIndex > fileSize)
+            {
                 fileIndex = fileSize;
-            instructionIndex = instructionIndex + 1) % fileSize;
+                instructionIndex = 3071;
+            }
         }
+
         if (option == 2) // retreat
         {
-            //TODO changeinstructionIndex = (instructionIndex - 1) % fileSize;
-            //TODO change fileIndex = fileIndex - (instructionIndex % 2);
-            if (fileIndex > fileSize)
-                fileIndex = fileSize;
+            instructionIndex = instructionIndex - 1;
+            fileIndex = fileIndex - (instructionIndex % 2);
+            if (instructionIndex < 0)
+            {
+                fileIndex = 1;
+                instructionIndex = 0;
+            }
         }
+
         if (option == 3) //change instruction
         {
             newInstr = input();
