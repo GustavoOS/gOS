@@ -124,7 +124,6 @@ void validateNextProgram(int candidate)
 {
     if (candidate < 0)
         return;
-    candidate = candidate % 10;
     if (statusTable[candidate] > 0)
         nextProgram = candidate;
 }
