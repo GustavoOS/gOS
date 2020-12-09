@@ -3,6 +3,7 @@ int nextProgram;
 
 int context[0];
 int statusTable[0];
+int nameTable[0];
 int slotPosition[0];
 int file[0];
 int stack[0];
@@ -147,14 +148,14 @@ void kill(int process)
 int findProgramByName(int name)
 {
     int index;
-    int programName;
     index = 0;
     while (index < 10)
     {
-        programName = readFromMemory(slotPosition[index] + 2577);
-        if (programName == name)
-            output((name << 16) + index);
+        if (nameTable[index] == name)
+        {
+            output((index << 16) + nameTable[index]);
             return index;
+        }
         index = index + 1;
     }
     return null;
@@ -162,6 +163,7 @@ int findProgramByName(int name)
 
 void takeUserAction(void)
 {
+    assignPointer(nameTable, 9752);
     while (nextProgram < 0)
     {
         output(49374); // C0DE
