@@ -122,10 +122,9 @@ void execute(void)
 
 void validateNextProgram(int candidate)
 {
-    if (candidate < 0)
-        return;
-    if (statusTable[candidate] > 0)
-        nextProgram = candidate;
+    if (candidate >= 0)
+        if (statusTable[candidate] > 0)
+            nextProgram = candidate;
 }
 
 void fastKill(int process)
