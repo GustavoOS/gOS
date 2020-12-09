@@ -139,7 +139,7 @@ void fastKill(int process)
 void kill(int process)
 {
     process = process % 10;
-    output(1027232 + process); // Faca
+    output(4207542272 + nameTable[process]); // Faca
     fastKill(process);
 }
 
