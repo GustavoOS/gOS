@@ -121,6 +121,8 @@ void execute(void)
 
 void validateNextProgram(int candidate)
 {
+    if (candidate < 0)
+        return;
     candidate = candidate % 10;
     if (statusTable[candidate] > 0)
         nextProgram = candidate;
@@ -142,12 +144,28 @@ void kill(int process)
     fastKill(process);
 }
 
+int findProgramByName(int name)
+{
+    int index;
+    int programName;
+    index = 0;
+    while (index < 10)
+    {
+        programName = readFromMemory(slotPosition[index] + 2577);
+        if (programName == name)
+            output((name << 16) + index);
+            return index;
+        index = index + 1;
+    }
+    return null;
+}
+
 void takeUserAction(void)
 {
     while (nextProgram < 0)
     {
         output(49374); // C0DE
-        validateNextProgram(input());
+        validateNextProgram(findProgramByName(input()));
     }
 
     if (statusTable[nextProgram] < 2)
