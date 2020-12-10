@@ -160,7 +160,7 @@ void selectProgram(int name)
 {
     while (nextProgram < 0)
     {
-        output(name); // C0DE
+        output(name);
         validateNextProgram(findProgramByName(input()));
     }
 }
