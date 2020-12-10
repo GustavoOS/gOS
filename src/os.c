@@ -129,8 +129,9 @@ void fastKill(int process)
 {
     if (statusTable[process] > 1)
     {
-        statusTable[12] = statusTable[12] - 1;
         statusTable[process] = 1;
+        if (statusTable[process] == 2)
+            statusTable[12] = statusTable[12] - 1;
     }
 }
 
@@ -204,6 +205,19 @@ void listProcessByCondition(int initial, int end, int condition)
     output((count << 24) + result);
 }
 
+int findEmptySlot(void)
+{
+    int i;
+    i = 0;
+    while (i < 10)
+    {
+        if (statusTable[i] == 0)
+            return i;
+        i = i + 1;
+    }
+    return null;
+}
+
 void takeUserAction(void)
 {
     int option;
@@ -248,6 +262,26 @@ void takeUserAction(void)
         {
             output(1477); // 5C5 Show Call Sign
             output(nameTable[input() % 10]);
+        }
+
+        if (option == 6) // Create File
+        {
+            option = findEmptySlot();
+            if (option > 0)
+            {
+                output(207);
+                nameTable[option] = input();
+                statusTable[option] = 1;
+            }
+            option = 6;
+        }
+
+        if (option == 7) // Delete file
+        {
+            selectProgram(3553); // DE1
+            kill(nextProgram);
+            statusTable[nextProgram] = 0;
+            nextProgram = null;
         }
     }
 }

@@ -29,3 +29,5 @@ Number  |  Command  |  Display
 3  |  Show Active Processes  |  54
 4  |  Show Blocked Processes  | 5B
 5  |  Show Call Sign of PID  |  5C5
+6  |  Create file  | CF
+7  |  Delete file  | DE1
