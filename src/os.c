@@ -184,6 +184,26 @@ void codeExecution(void)
     recoverState();
 }
 
+void listProcessByCondition(int initial, int end, int condition)
+{
+    int result;
+    int count;
+
+    result = 0;
+    count = 0;
+    while (initial < end)
+    {
+        if (statusTable[initial] == condition)
+        {
+            count = count + 1;
+            result = (result << 4) + initial;
+        }
+        initial = initial + 1;
+    }
+
+    output((count << 24) + result);
+}
+
 void takeUserAction(void)
 {
     int option;
@@ -208,6 +228,26 @@ void takeUserAction(void)
             output(option + nameTable[nextProgram]);
             option = 2;
             nextProgram = null;
+        }
+
+        if (option == 3) // List Active
+        {
+            output(90); // 5A Show Active
+            listProcessByCondition(0, 5, 2);
+            listProcessByCondition(5, 10, 2);
+        }
+
+        if (option == 4) // List Blocked
+        {
+            output(91); // 5B Show Blocked
+            listProcessByCondition(0, 5, 3);
+            listProcessByCondition(5, 10, 4);
+        }
+
+        if (option == 5)
+        {
+            output(1477); // 5C5 Show Call Sign
+            output(nameTable[input() % 10]);
         }
     }
 }
