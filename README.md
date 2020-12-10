@@ -25,3 +25,4 @@ Number  |  Command  |  Display
 --------  |  ------  | -------
 0  |  Execute or continue program  | C0DE
 1  | Kill proccess  | FACA
+2  |  Change Call Sign (Rename)  | CC5
