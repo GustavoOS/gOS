@@ -136,9 +136,11 @@ void fastKill(int process)
 
 void kill(int process)
 {
-    process = process % 10;
-    output(4207542272 + nameTable[process]); // Faca
-    fastKill(process);
+    if (process >= 0)
+    {
+        output(4207542272 + nameTable[process]); // Faca
+        fastKill(process);
+    }
 }
 
 int findProgramByName(int name)
@@ -154,14 +156,18 @@ int findProgramByName(int name)
     return null;
 }
 
-void takeUserAction(void)
+void selectProgram(int name)
 {
     while (nextProgram < 0)
     {
-        output(49374); // C0DE
+        output(name); // C0DE
         validateNextProgram(findProgramByName(input()));
     }
+}
 
+void codeExecution(void)
+{
+    selectProgram(49374); // C0DE
     if (statusTable[nextProgram] < 2)
     {
         execute();
@@ -176,6 +182,24 @@ void takeUserAction(void)
     if (statusTable[10] != nextProgram)
         insertProgramIntoMemory();
     recoverState();
+}
+
+void takeUserAction(void)
+{
+    int option;
+    while (nextProgram < 0)
+    {
+        output(1541);
+        option = input();
+        if (option == 49374) // C0DE
+            codeExecution();
+        if (option == 64202)
+        {
+            selectProgram(64202); // FACA
+            kill(nextProgram);
+            nextProgram = null;
+        }
+    }
 }
 
 void firstRun(void)
