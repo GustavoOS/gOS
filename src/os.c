@@ -191,11 +191,11 @@ void takeUserAction(void)
     {
         output(1541);
         option = input();
-        if (option == 0) // C0DE
-            codeExecution();
-        if (option == 64202)
+        if (option == 0)
+            codeExecution(); // C0DE
+        if (option == 1)
         {
-            selectProgram(1); // FACA
+            selectProgram(64202); // FACA
             kill(nextProgram);
             nextProgram = null;
         }
