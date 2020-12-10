@@ -19,3 +19,9 @@ State | Meaning
 1 | Exists
 2 | Executing
 3 | Blocked
+
+## Commands
+Number  |  Command  |  Display
+--------  |  ------  | -------
+0  |  Execute or continue program  | C0DE
+1  | Kill proccess  | FACA
