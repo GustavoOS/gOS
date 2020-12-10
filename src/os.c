@@ -84,23 +84,21 @@ void saveState(void)
 
 void insertProgramIntoMemory(void)
 {
-    int instructionCount;
-    int copied;
+    int remainingInstructions;
     int slotStart;
-    int data;
     int program[0];
 
     slotStart = slotPosition[nextProgram];
     assignPointer(program, 0);
     assignPointer(file, slotStart + 1);
-    instructionCount = readFromMemory(slotStart);
-    copied = 0;
-    while (copied < instructionCount)
+    remainingInstructions = readFromMemory(slotStart);
+    while (remainingInstructions > 0)
     {
-        data = file[copied / 2];
-        program[copied] = extractFirstHW(data);
-        program[copied + 1] = extractSecondHW(data);
-        copied = copied + 2;
+        program[0] = extractFirstHW(file[0]);
+        program[1] = extractSecondHW(file[0]);
+        assignPointer(program, readPointer(program) + 2);
+        assignPointer(file, readPointer(file) + 1);
+        remainingInstructions = remainingInstructions - 2;
     }
     statusTable[10] = nextProgram; // In memory
 }
@@ -200,16 +198,15 @@ void findNextProcess(void)
     int nextCandidate;
     int i;
     i = 0;
-    nextCandidate = statusTable[10];
-    while (nextProgram < 0)
+    nextCandidate = (statusTable[10] + 1) % 10;
+    while (statusTable[nextCandidate] != 2)
     {
-        nextCandidate = (nextCandidate + 1) % 10;
         if (i == 10)
             return;
-        if (statusTable[nextCandidate] == 2)
-            nextProgram = nextCandidate;
+        nextCandidate = (nextCandidate + 1) % 10;
         i = i + 1;
     }
+    nextProgram = nextCandidate;
 }
 
 void schedule(void)
