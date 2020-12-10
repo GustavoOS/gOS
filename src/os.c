@@ -199,6 +199,16 @@ void takeUserAction(void)
             kill(nextProgram);
             nextProgram = null;
         }
+        if (option == 2) // rename
+        {
+            selectProgram(3269); // CC5 or Change Call Sign
+            option = nameTable[nextProgram] << 16;
+            output(option);
+            nameTable[nextProgram] = input();
+            output(option + nameTable[nextProgram]);
+            option = 2;
+            nextProgram = null;
+        }
     }
 }
 
