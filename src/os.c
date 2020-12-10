@@ -274,6 +274,14 @@ void takeUserAction(void)
             }
             option = 6;
         }
+
+        if (option == 7) // Delete file
+        {
+            selectProgram(3553); // DE1
+            kill(nextProgram);
+            statusTable[nextProgram] = 0;
+            nextProgram = null;
+        }
     }
 }
 
