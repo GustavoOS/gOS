@@ -129,8 +129,9 @@ void fastKill(int process)
 {
     if (statusTable[process] > 1)
     {
-        statusTable[12] = statusTable[12] - 1;
         statusTable[process] = 1;
+        if (statusTable[process] == 2)
+            statusTable[12] = statusTable[12] - 1;
     }
 }
 
