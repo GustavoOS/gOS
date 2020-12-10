@@ -198,16 +198,15 @@ void findNextProcess(void)
     int nextCandidate;
     int i;
     i = 0;
-    nextCandidate = statusTable[10];
-    while (nextProgram < 0)
+    nextCandidate = (statusTable[10] + 1) % 10;
+    while (statusTable[nextCandidate] != 2)
     {
-        nextCandidate = (nextCandidate + 1) % 10;
         if (i == 10)
             return;
-        if (statusTable[nextCandidate] == 2)
-            nextProgram = nextCandidate;
+        nextCandidate = (nextCandidate + 1) % 10;
         i = i + 1;
     }
+    nextProgram = nextCandidate;
 }
 
 void schedule(void)
