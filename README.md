@@ -21,6 +21,8 @@ State | Meaning
 3 | Blocked
 
 ## Commands
+
+
 Number  |  Command  |  Display
 --------  |  ------  | -------
 0  |  Execute or continue program  | C0DE
@@ -31,3 +33,15 @@ Number  |  Command  |  Display
 5  |  Show Call Sign of PID  |  5C5
 6  |  Create file  | CF
 7  |  Delete file  | DE1
+8  |  Edit File  |  F11EEDIT
+
+
+## File Editor Commands
+
+
+Number  |  Command
+--------  |  ------  
+0  |  Exit 
+1  |  Go to next line
+2  |  Go to previous line
+3  |  Change line
