@@ -218,6 +218,59 @@ int findEmptySlot(void)
     return null;
 }
 
+int readInstruction(int index)
+{
+    if ((index % 2) == 0)
+        return extractFirstHW(file[index / 2]);
+    return extractSecondHW(file[index / 2]);
+}
+
+void editFile(void)
+{
+    int option;
+    int instr;
+    int newInstr;
+    int index;
+
+    index = 0;
+    option = null;
+    assignPointer(file, slotPosition[nextProgram] + 1);
+    while (option != 0)
+    {
+        output(((index + 1) << 16) + readInstruction(index));
+        option = input();
+        if (option == 1) // advance
+            index = (index + 1) % 3072;
+
+        if (option == 2) // retreat
+        {
+            index = index - 1;
+            if(index < 0)
+                index = 3071;
+        }
+
+        if (option == 3) //change instruction
+        {
+            option = index / 2;
+            newInstr = input();
+            instr = file[option];
+            if ((index % 2) == 0)
+            {
+                newInstr = newInstr << 16;
+                instr = extractSecondHW(instr);
+            }
+            else
+                instr = ((instr) >> 16) << 16;
+            file[option] = instr + newInstr;
+            assignPointer(file, readPointer(file) - 1);
+            if((option) > file[0])
+                file[0] = option;
+            option = 3;
+            assignPointer(file, readPointer(file) + 1);
+        }
+    }
+}
+
 void takeUserAction(void)
 {
     int option;
@@ -281,6 +334,13 @@ void takeUserAction(void)
             selectProgram(3553); // DE1
             kill(nextProgram);
             statusTable[nextProgram] = 0;
+            nextProgram = null;
+        }
+
+        if (option == 8) // File Editor
+        {
+            selectProgram(4045335831); // F11EED17
+            editFile();
             nextProgram = null;
         }
     }
